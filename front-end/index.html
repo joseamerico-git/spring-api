@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Buscar e Atualizar Produtos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7f6; }
+        .search-box { margin-bottom: 20px; }
+        input { padding: 10px; width: 300px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 15px; font-size: 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        
+        /* Estilos da Tabela */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #e9ecef; }
+        /* Efeito visual para indicar que a linha é clicável */
+        tbody tr { cursor: pointer; transition: background 0.2s; }
+        tbody tr:hover { background-color: #f1f3f5; }
+        
+        .sem-resultados { color: #666; font-style: italic; margin-top: 10px; }
+
+        /* Estilos do Modal (Janela Suspensa) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 8px; width: 350px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .modal-content h3 { margin-top: 0; }
+        .modal-content .form-group { margin-bottom: 15px; }
+        .modal-content label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .modal-content input { width: 93%; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .btn-salvar { background-color: #28a745; }
+        .btn-salvar:hover { background-color: #218838; }
+        .btn-cancelar { background-color: #6c757d; }
+        .btn-cancelar:hover { background-color: #5a6268; }
+    </style>
+</head>
+<body>
+
+    <h2>Buscar e Editar Produtos</h2>
+    
+    <div class="search-box">
+        <input type="text" id="campoBusca" placeholder="Digite o nome ou parte dele...">
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Preço (R$)</th>
+            </tr>
+        </thead>
+        <tbody id="tabelaResultados"></tbody>
+    </table>
+
+    <div id="mensagem" class="sem-resultados">Digite algo para iniciar a busca.</div>
+
+    <!-- Estrutura do Modal (Inicia oculto) -->
+    <div id="meuModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Editar Produto</h3>
+            <form id="formEditar">
+                <!-- Campo oculto para guardar o ID do produto selecionado -->
+                <input type="hidden" id="editId">
+                
+                <div class="form-group">
+                    <label for="editNome">Nome:</label>
+                    <input type="text" id="editNome" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editPreco">Preço (R$):</label>
+                    <input type="number" id="editPreco" step="0.01" required>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+	
+	<!-- Input adicionado ao seu formulário HTML -->
+	<div class="form-group">
+	    <label for="campoImagem">Foto do Produto:</label>
+	    <input type="file" id="campoImagem" accept="image/*">
+	</div>
+	<button type="button" onclick="enviarFoto(1)">Enviar Foto</button>
+
+	<script>
+	async function enviarFoto(idProduto) {
+	    const inputImagem = document.getElementById('campoImagem');
+	    
+	    if (inputImagem.files.length === 0) {
+	        alert("Selecione uma imagem primeiro.");
+	        return;
+	    }
+
+	    // O FormData empacota o arquivo corretamente no padrão multipart/form-data
+	    const formData = new FormData();
+	    formData.append("imagem", inputImagem.files[0]);
+
+	    try {
+	        const resposta = await fetch(`http://localhost:8080/api/produtos/${idProduto}/upload-imagem`, {
+	            method: "POST",
+	            body: formData // Não adicione headers de Content-Type aqui, o browser faz isso sozinho
+	        });
+
+	        const resultado = await resposta.text();
+	        alert(resultado);
+	    } catch (erro) {
+	        alert("Erro no upload: " + erro.message);
+	    }
+	}
+	</script>
+	
+
+    <script>
+        let timeoutBusca;
+
+        // Monitora a digitação com Debounce
+        document.getElementById('campoBusca').addEventListener('input', function() {
+            clearTimeout(timeoutBusca);
+            timeoutBusca = setTimeout(() => { realizarBusca(); }, 300); 
+        });
+
+        async function realizarBusca() {
+            const termo = document.getElementById('campoBusca').value.trim();
+            const tabelaBody = document.getElementById('tabelaResultados');
+            const mensagem = document.getElementById('mensagem');
+            
+            if (termo === '') {
+                tabelaBody.innerHTML = '';
+                mensagem.innerText = 'Digite algo para iniciar a busca.';
+                return;
+            }
+
+            try {
+                const url = `http://localhost:8080/produtos/buscar?nome=${encodeURIComponent(termo)}`;
+                const resposta = await fetch(url);
+                const produtos = await resposta.json();
+
+                tabelaBody.innerHTML = '';
+
+                if (produtos.length === 0) {
+                    mensagem.innerText = 'Nenhum produto encontrado.';
+                    return;
+                }
+
+                mensagem.innerText = '';
+
+                produtos.forEach(produto => {
+                    const linha = document.createElement('tr');
+                    linha.innerHTML = `
+                        <td>${produto.id}</td>
+                        <td>${produto.nome}</td>
+                        <td>R$ ${produto.preco.toFixed(2)}</td>
+                    `;
+                    
+                    // Adiciona o evento de clique na linha inteira para abrir o modal
+                    linha.onclick = () => abrirModal(produto);
+                    
+                    tabelaBody.appendChild(linha);
+                });
+
+            } catch (erro) {
+                tabelaBody.innerHTML = '';
+                mensagem.innerText = 'Erro ao buscar dados: ' + erro.message;
+            }
+        }
+
+        // Funções de controle do Modal
+        function abrirModal(produto) {
+            document.getElementById('editId').value = produto.id;
+            document.getElementById('editNome').value = produto.nome;
+            document.getElementById('editPreco').value = produto.preco;
+            document.getElementById('meuModal').style.display = 'flex';
+        }
+
+        function fecharModal() {
+            document.getElementById('meuModal').style.display = 'none';
+        }
+
+        // Envia os dados atualizados para a API (Método PUT)
+        document.getElementById('formEditar').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Impede o HTML de recarregar a página
+
+            const id = document.getElementById('editId').value;
+            const nome = document.getElementById('editNome').value;
+            const preco = parseFloat(document.getElementById('editPreco').value);
+
+            const dadosAtualizados = { nome: nome, preco: preco };
+
+            try {
+                const url = `http://localhost:8080/produtos/${id}`;
+                const resposta = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dadosAtualizados)
+                });
+
+                if (!resposta.ok) {
+                    throw new Error('Falha ao atualizar o produto.');
+                }
+
+                alert('Produto atualizado com sucesso!');
+                fecharModal();
+                realizarBusca(); // Atualiza a tabela na tela com os novos dados do banco
+
+            } catch (erro) {
+                alert('Erro ao salvar: ' + erro.message);
+            }
+        });
+    </script>
+	
+	
+	
+	
+</body>
+</html>
