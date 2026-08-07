@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Produto com Resumo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f8f9fa; }
+        h2 { color: #333; }
+        
+        /* Layout em duas colunas usando Flexbox */
+        .container { display: flex; gap: 40px; max-width: 1000px; margin-top: 20px; }
+        .coluna-esquerda, .coluna-direita { flex: 1; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* Formulário e Inputs */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { padding: 12px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
+        button:hover { background-color: #218838; }
+        
+        /* Previews e Resumos */
+        .preview-container { margin-top: 10px; display: none; }
+        .preview-container img { max-width: 150px; max-height: 150px; border: 1px dashed #ccc; border-radius: 4px; padding: 5px; }
+        #mensagem { margin-top: 15px; font-weight: bold; text-align: center; }
+
+        /* Card do Último Produto */
+        .card-produto { border: 1px solid #e0e0e0; border-radius: 6px; padding: 20px; text-align: center; background: #fafafa; }
+        .card-produto img { max-width: 100%; max-height: 250px; object-fit: contain; border-radius: 4px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .produto-info { font-size: 18px; margin: 8px 0; color: #333; }
+        .produto-preco { font-size: 22px; color: #28a745; font-weight: bold; margin: 5px 0; }
+        .sem-produto { color: #888; text-align: center; font-style: italic; padding: 40px 0; }
+    </style>
+</head>
+<body>
+
+    <h2>Gerenciador de Produtos</h2>
+    
+    <div class="container">
+        <!-- COLUNA ESQUERDA: FORMULÁRIO -->
+        <div class="coluna-esquerda">
+            <h3>Cadastrar Novo Produto</h3>
+            <form id="produtoForm">
+                <div class="form-group">
+                    <label for="nome">Nome do Produto:</label>
+                    <input type="text" id="nome" required placeholder="Ex: Teclado Mecânico">
+                </div>
+
+                <div class="form-group">
+                    <label for="preco">Preço (R$):</label>
+                    <input type="number" id="preco" step="0.01" required placeholder="0.00">
+                </div>
+
+                <div class="form-group">
+                    <label for="imagem">Imagem do Produto:</label>
+                    <input type="file" id="imagem" accept="image/*" required>
+                    
+                    <div class="preview-container" id="previewContainer">
+                        <p style="font-size: 11px; color: #888; margin: 5px 0;">Pré-visualização do arquivo:</p>
+                        <img id="imagemPreview" src="" alt="Preview">
+                    </div>
+                </div>
+
+                <button type="submit">Enviar Produto</button>
+            </form>
+            <div id="mensagem"></div>
+        </div>
+
+        <!-- COLUNA DIREITA: RESUMO DO ÚLTIMO CADASTRADO -->
+        <div class="coluna-direita">
+            <h3>Último Produto Cadastrado</h3>
+            <div id="containerResumo">
+                <p class="sem-produto">Nenhum produto cadastrado nesta sessão ainda.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const backendUrl = 'http://localhost:8080';
+        const imagemInput = document.getElementById('imagem');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagemPreview = document.getElementById('imagemPreview');
+        const containerResumo = document.getElementById('containerResumo');
+
+        // Lógica do Preview Temporário (Antes do Envio)
+        imagemInput.addEventListener('change', function() {
+            const arquivo = this.files[0];
+            if (arquivo) {
+                const leitor = new FileReader();
+                leitor.addEventListener('load', function() {
+                    imagemPreview.setAttribute('src', this.result);
+                    previewContainer.style.display = 'block';
+                });
+                leitor.readAsDataURL(arquivo);
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+
+        // Lógica de Envio e Renderização do Resumo
+        document.getElementById('produtoForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const mensagemDiv = document.getElementById('mensagem');
+            mensagemDiv.innerText = "Enviando para o servidor...";
+            mensagemDiv.style.color = "black";
+
+            const formData = new FormData();
+            formData.append('nome', document.getElementById('nome').value);
+            formData.append('preco', document.getElementById('preco').value);
+            formData.append('imagem', imagemInput.files[0]);
+
+            try {
+                const response = await fetch(`${backendUrl}/produtos`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const produtoSalvo = await response.json();
+                    
+                    mensagemDiv.innerText = "Cadastrado com sucesso!";
+                    mensagemDiv.style.color = "green";
+
+                    // Constrói a URL completa da imagem salva no Spring Boot
+                    const urlImagemServidor = `${backendUrl}${produtoSalvo.imagemUrl}`;
+
+                    // Atualiza a coluna da direita com os dados retornados do Banco de Dados
+                    containerResumo.innerHTML = `
+                        <div class="card-produto">
+                            <img src="${urlImagemServidor}" alt="${produtoSalvo.nome}" onerror="this.src='https://placehold.co'">
+                            <div class="produto-info"><strong>ID:</strong> ${produtoSalvo.id}</div>
+                            <div class="produto-info"><strong>Nome:</strong> ${produtoSalvo.nome}</div>
+                            <div class="produto-preco">R$ ${produtoSalvo.preco.toFixed(2)}</div>
+                        </div>
+                    `;
+
+                    // Reseta o formulário esquerdo
+                    document.getElementById('produtoForm').reset();
+                    previewContainer.style.display = 'none';
+
+                } else {
+                    mensagemDiv.innerText = "Erro no servidor. Status: " + response.status;
+                    mensagemDiv.style.color = "red";
+                }
+            } catch (error) {
+                console.error(error);
+                mensagemDiv.innerText = "Erro de conexão com o backend.";
+                mensagemDiv.style.color = "red";
+            }
+        });
+    </script>
+</body>
+</html>

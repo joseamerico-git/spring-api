@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Produto com Imagem</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 8px; max-width: 300px; }
+        button { padding: 10px 15px; background-color: #28a745; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        #mensagem { margin-top: 20px; font-weight: bold; }
+        
+        /* Estilos para a área de preview */
+        .preview-container { margin-top: 10px; display: none; }
+        .preview-container img { max-width: 200px; max-height: 200px; border: 2px solid #ddd; border-radius: 4px; padding: 5px; }
+    </style>
+</head>
+<body>
+
+    <h2>Cadastrar Novo Produto</h2>
+    
+    <form id="produtoForm">
+        <div class="form-group">
+            <label for="nome">Nome do Produto:</label>
+            <input type="text" id="nome" required>
+        </div>
+
+        <div class="form-group">
+            <label for="preco">Preço (R$):</label>
+            <input type="number" id="preco" step="0.01" required>
+        </div>
+
+        <div class="form-group">
+            <label for="imagem">Imagem do Produto:</label>
+            <!-- O evento 'change' dispara o preview quando um arquivo é escolhido -->
+            <input type="file" id="imagem" accept="image/*" required>
+            
+            <!-- Elementos visuais para exibir o preview -->
+            <div class="preview-container" id="previewContainer">
+                <p style="font-size: 12px; color: #666; margin: 5px 0;">Pré-visualização:</p>
+                <img id="imagemPreview" src="" alt="Preview da Imagem">
+            </div>
+        </div>
+
+        <button type="submit">Enviar Produto</button>
+    </form>
+
+    <div id="mensagem"></div>
+
+    <script>
+        const imagemInput = document.getElementById('imagem');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagemPreview = document.getElementById('imagemPreview');
+
+        // Lógica para gerar o Preview da Imagem
+        imagemInput.addEventListener('change', function() {
+            const arquivo = this.files[0];
+
+            if (arquivo) {
+                const leitor = new FileReader();
+
+                // Quando o JavaScript terminar de ler o arquivo, define o src da imagem
+                leitor.addEventListener('load', function() {
+                    imagemPreview.setAttribute('src', this.result);
+                    previewContainer.style.display = 'block'; // Mostra o container do preview
+                });
+
+                leitor.readAsDataURL(arquivo); // Lê o arquivo como URL Base64
+            } else {
+                // Se o usuário cancelar a seleção, esconde o preview
+                previewContainer.style.display = 'none';
+                imagemPreview.setAttribute('src', '');
+            }
+        });
+
+        // Lógica de Envio do Formulário (Fetch API)
+        document.getElementById('produtoForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const mensagemDiv = document.getElementById('mensagem');
+            mensagemDiv.innerText = "Enviando...";
+            mensagemDiv.style.color = "black";
+
+            const formData = new FormData();
+            formData.append('nome', document.getElementById('nome').value);
+            formData.append('preco', document.getElementById('preco').value);
+            formData.append('imagem', imagemInput.files[0]);
+
+            try {
+                const response = await fetch('http://localhost:8080/produtos', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const resultado = await response.json();
+                    mensagemDiv.innerText = "Produto cadastrado com sucesso! ID: " + resultado.id;
+                    mensagemDiv.style.color = "green";
+                    
+                    // Reseta o formulário e esconde o preview
+                    document.getElementById('produtoForm').reset();
+                    previewContainer.style.display = 'none';
+                    imagemPreview.setAttribute('src', '');
+                } else {
+                    mensagemDiv.innerText = "Erro ao cadastrar produto. Status: " + response.status;
+                    mensagemDiv.style.color = "red";
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                mensagemDiv.innerText = "Erro de conexão com o servidor.";
+                mensagemDiv.style.color = "red";
+            }
+        });
+    </script>
+</body>
+</html>

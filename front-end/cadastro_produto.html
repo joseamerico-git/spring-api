@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Produto com Imagem</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 8px; max-width: 300px; }
+        button { padding: 10px 15px; background-color: #28a745; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        #mensagem { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>Cadastrar Novo Produto</h2>
+    
+    <!-- O id é usado no JavaScript para capturar o evento de envio -->
+    <form id="produtoForm">
+        <div class="form-group">
+            <label for="nome">Nome do Produto:</label>
+            <input type="text" id="nome" required>
+        </div>
+
+        <div class="form-group">
+            <label for="preco">Preço (R$):</label>
+            <input type="number" id="preco" step="0.01" required>
+        </div>
+
+        <div class="form-group">
+            <label for="imagem">Imagem do Produto:</label>
+            <input type="file" id="imagem" accept="image/*" required>
+        </div>
+
+        <button type="submit">Enviar Produto</button>
+    </form>
+
+    <div id="mensagem"></div>
+
+    <script>
+        document.getElementById('produtoForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Impede a página de recarregar
+
+            const mensagemDiv = document.getElementById('mensagem');
+            mensagemDiv.innerText = "Enviando...";
+            mensagemDiv.style.color = "black";
+
+            // Cria o objeto FormData necessário para enviar multipart/form-data
+            const formData = new FormData();
+            formData.append('nome', document.getElementById('nome').value);
+            formData.append('preco', document.getElementById('preco').value);
+            formData.append('imagem', document.getElementById('imagem').files[0]);
+
+            try {
+                // Certifique-se de que a URL e a porta (8080) correspondem ao seu Spring Boot
+                const response = await fetch('http://localhost:8080/produtos', {
+                    method: 'POST',
+                    body: formData // O Fetch API define o Content-Type correto automaticamente
+                });
+
+                if (response.ok) {
+                    const resultado = await response.json();
+                    mensagemDiv.innerText = "Produto cadastrado com sucesso! ID: " + resultado.id;
+                    mensagemDiv.style.color = "green";
+                    document.getElementById('produtoForm').reset(); // Limpa o formulário
+                } else {
+                    mensagemDiv.innerText = "Erro ao cadastrar produto. Status: " + response.status;
+                    mensagemDiv.style.color = "red";
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                mensagemDiv.innerText = "Erro de conexão com o servidor.";
+                mensagemDiv.style.color = "red";
+            }
+        });
+    </script>
+</body>
+</html>
