@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Produtos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .img-container {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .product-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .no-img {
+            color: #888;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        .loading {
+            font-weight: bold;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Produtos Cadastrados</h2>
+    <div id="status" class="loading">Carregando produtos...</div>
+
+    <table id="produtos-tabela" style="display: none;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Preço</th>
+                <th>Imagens</th>
+            </tr>
+        </thead>
+        <tbody id="produtos-lista">
+            <!-- Os dados da API serão inseridos aqui -->
+        </tbody>
+    </table>
+
+    <script>
+        // Substitua pela URL real da sua API
+        const API_URL = 'http:localhost:8080'; 
+
+        async function carregarProdutos() {
+            try {
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar dados da API');
+                }
+
+                const produtos = await response.json();
+                const tbody = document.getElementById('produtos-lista');
+                const tabela = document.getElementById('produtos-tabela');
+                const status = document.getElementById('status');
+
+                // Limpa o corpo da tabela antes de inserir
+                tbody.innerHTML = '';
+
+                if (produtos.length === 0) {
+                    status.textContent = 'Nenhum produto encontrado.';
+                    return;
+                }
+
+                produtos.forEach(produto => {
+                    const tr = document.createElement('tr');
+
+                    // Trata o array de imagens (vazio, nulo ou com itens)
+                    let imagensHTML = '<span class="no-img">Sem imagem</span>';
+                    
+                    if (produto.imagens && produto.imagens.length > 0) {
+                        imagensHTML = '<div class="img-container">';
+                        produto.imagens.forEach(url => {
+                            imagensHTML += `<img src="${url}" class="product-img" alt="${produto.nome}">`;
+                        });
+                        imagensHTML += '</div>';
+                    }
+
+                    // Monta as linhas da tabela
+                    tr.innerHTML = `
+                        <td>${produto.id}</td>
+                        <td>${produto.nome}</td>
+                        <td>R$ ${Number(produto.preco).toFixed(2)}</td>
+                        <td>${imagensHTML}</td>
+                    `;
+
+                    tbody.appendChild(tr);
+                });
+
+                // Esconde o status de carregamento e mostra a tabela
+                status.style.display = 'none';
+                tabela.style.display = 'table';
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('status').textContent = 'Erro ao carregar os produtos. Tente novamente mais tarde.';
+            }
+        }
+
+        // Executa a função ao carregar a página
+        window.onload = carregarProdutos;
+    </script>
+</body>
+</html>

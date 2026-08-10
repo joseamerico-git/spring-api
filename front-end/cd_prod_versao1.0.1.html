@@ -130,7 +130,9 @@
                     // Gera as tags HTML de imagem vindas do servidor do Spring
                     let imagensHtml = '';
                     produtoSalvo.imagensUrls.forEach(url => {
+                        console.log(url)
                         imagensHtml += `<img src="${backendUrl}${url}" onerror="this.src='https://placehold.co'">`;
+                       
                     });
 
                     // Renderiza o resumo compacto contendo a lista de fotos salvas
@@ -143,6 +145,7 @@
                             </div>
                             <div class="grid-imagens">
                                 ${imagensHtml}
+                                
                             </div>
                         </div>
                     `;

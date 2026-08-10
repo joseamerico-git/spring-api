@@ -61,6 +61,12 @@
 
     <div id="mensagem" class="sem-resultados">Digite algo para iniciar a busca.</div>
 
+ <!--  *******************************************   -->
+
+
+ 
+ <!--  *******************************************   -->
+
     <!-- Estrutura do Modal (Inicia oculto) -->
     <div id="meuModal" class="modal-overlay">
         <div class="modal-content">
@@ -86,6 +92,7 @@
             </form>
         </div>
     </div>
+    
 	
 	<!-- Input adicionado ao seu formulário HTML -->
 	<div class="form-group">
@@ -195,8 +202,8 @@
             const id = document.getElementById('editId').value;
             const nome = document.getElementById('editNome').value;
             const preco = parseFloat(document.getElementById('editPreco').value);
-
-            const dadosAtualizados = { nome: nome, preco: preco };
+          
+            const dadosAtualizados = { nome: nome, preco: preco};
 
             try {
                 const url = `http://localhost:8080/produtos/${id}`;
