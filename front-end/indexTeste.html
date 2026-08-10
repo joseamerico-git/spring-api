@@ -1,51 +1,173 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://googleapis.com">
     <title>Gerenciador de Produtos</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7f6; }
-        .search-container { margin-bottom: 20px; }
-        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
-        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f7f6;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
         /* Estilo da Tabela */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #007bff; color: white; }
-        tr:hover { background-color: #f1f1f1; cursor: pointer; }
-        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+        }
+
         /* Estilo do Modal */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: white; margin: 10% auto; padding: 25px; border-radius: 8px; width: 450px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .close-btn { position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #aaa; }
-        .close-btn:hover { color: black; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 25px;
+            border-radius: 8px;
+            width: 450px;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close-btn:hover {
+            color: black;
+        }
 
         /* Estilo do Carrossel */
-        .carousel-container { display: flex; align-items: center; justify-content: space-between; max-width: 350px; margin: 20px auto; }
-        .image-box { width: 250px; height: 250px; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd; background-color: #fafafa; border-radius: 4px; overflow: hidden; }
-        .image-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .btn-nav { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; font-size: 18px; border-radius: 4px; transition: 0.2s; }
-        .btn-nav:hover { background: #0056b3; }
-        #indicadorImagem { text-align: center; margin-top: 5px; font-weight: bold; color: #555; }
+        .carousel-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 350px;
+            margin: 20px auto;
+        }
+
+        .image-box {
+            width: 250px;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ddd;
+            background-color: #fafafa;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .image-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .btn-nav {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+
+        .btn-nav:hover {
+            background: #0056b3;
+        }
+
+        #indicadorImagem {
+            text-align: center;
+            margin-top: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .icone-tabela {
+            color: #007bff;
+            /* Cor azul combinando com o tema */
+            vertical-align: middle;
+            transition: transform 0.2s;
+        }
+
+        tr:hover .icone-tabela {
+            transform: scale(1.2);
+            /* Dá um leve zoom no ícone quando passa o mouse na linha */
+        }
     </style>
 </head>
+
 <body>
 
     <h2>📦 Busca de Produtos</h2>
-    
+
     <div class="search-container">
-        <input type="text" id="inputBusca" placeholder="Digite o nome do produto para pesquisar..." oninput="dispararBuscaComDelay()">
+        <input type="text" id="inputBusca" placeholder="Digite o nome do produto para pesquisar..."
+            oninput="dispararBuscaComDelay()">
     </div>
 
     <table id="tabelaProdutos">
         <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nome</th>
-                <th>Preço</th>
-            </tr>
-        </thead>
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Preço</th>
+        <th style="text-align: center;">Ação</th> <!-- Nova coluna para o ícone -->
+    </tr>
+</thead>
         <tbody>
             <tr>
                 <td colspan="3" style="text-align: center; color: #777;">Digite algo para iniciar a busca...</td>
@@ -59,7 +181,7 @@
             <span class="close-btn" onclick="fecharModal()">&times;</span>
             <h3 id="modalNome">Nome do Produto</h3>
             <p><strong>Preço:</strong> R$ <span id="modalPreco">0.00</span></p>
-            
+
             <!-- CARROSSEL -->
             <div class="carousel-container">
                 <button class="btn-nav" onclick="mudarImagem(-1)">&#10094;</button>
@@ -89,7 +211,7 @@
         function dispararBuscaComDelay() {
             clearTimeout(timeoutBusca);
             const termo = document.getElementById("inputBusca").value.trim();
-            
+
             if (termo === "") {
                 limparTabela();
                 return;
@@ -102,28 +224,28 @@
         }
 
         // 2. Executa a filtragem na lista (Aqui você fará o fetch para o Spring Boot)
-      
+
         // 2. Executa a filtragem na lista (Aqui você fará o fetch para o Spring Boot)
-      // Substitua a função executarPesquisa antiga por esta:
-function executarPesquisa(termo) {
-    // Faz a requisição HTTP GET para o seu servidor local passando o termo digitado
-    fetch(`http://localhost:8080/produtos/buscar?nome=${encodeURIComponent(termo)}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Erro na resposta do servidor");
-            }
-            return response.json(); // Transforma a resposta em JSON
-        })
-        .then(dados => {
-            // Envia a lista de produtos retornada pelo Spring Boot para preencher a tabela
-            renderizarTabela(dados);
-        })
-        .catch(err => {
-            console.error("Erro ao buscar dados do Spring Boot:", err);
-            const tbody = document.querySelector("#tabelaProdutos tbody");
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">Erro ao conectar com o servidor.</td></tr>`;
-        });
-}
+        // Substitua a função executarPesquisa antiga por esta:
+        function executarPesquisa(termo) {
+            // Faz a requisição HTTP GET para o seu servidor local passando o termo digitado
+            fetch(`http://localhost:8080/produtos/buscar?nome=${encodeURIComponent(termo)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Erro na resposta do servidor");
+                    }
+                    return response.json(); // Transforma a resposta em JSON
+                })
+                .then(dados => {
+                    // Envia a lista de produtos retornada pelo Spring Boot para preencher a tabela
+                    renderizarTabela(dados);
+                })
+                .catch(err => {
+                    console.error("Erro ao buscar dados do Spring Boot:", err);
+                    const tbody = document.querySelector("#tabelaProdutos tbody");
+                    tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">Erro ao conectar com o servidor.</td></tr>`;
+                });
+        }
         // 3. Renderiza as linhas na tabela dinamicamente
         function renderizarTabela(listaProdutos) {
             const tbody = document.querySelector("#tabelaProdutos tbody");
@@ -134,12 +256,34 @@ function executarPesquisa(termo) {
                 return;
             }
 
+
+            listaProdutos.forEach(produto => {
+                const tr = document.createElement("tr");
+
+                // Adicionamos a tag <i class="material-icons"> com o ícone "visibility" (olho) ou "search" (lupa)
+                tr.innerHTML = `
+        <td>${produto.id}</td>
+        <td>${produto.nome}</td>
+        <td>R$ ${produto.preco.toFixed(2)}</td>
+        <td style="text-align: center; width: 50px;">
+            <i class="material-icons icone-tabela">visibility</i>
+        </td>
+    `;
+
+                // Mantém a mesma lógica de clique para abrir o modal
+                tr.onclick = () => abrirModal(produto);
+                tbody.appendChild(tr);
+            });
+
+
             listaProdutos.forEach(produto => {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
                     <td>${produto.id}</td>
                     <td>${produto.nome}</td>
                     <td>R$ ${produto.preco.toFixed(2)}</td>
+                    <td> <i class="material-icons icone-tabela">visibility</i></td>
+                    
                 `;
                 // Ao clicar na linha, abre o modal enviando o objeto inteiro do produto
                 tr.onclick = () => abrirModal(produto);
@@ -155,7 +299,7 @@ function executarPesquisa(termo) {
         function abrirModal(produto) {
             document.getElementById("modalNome").innerText = produto.nome;
             document.getElementById("modalPreco").innerText = produto.preco.toFixed(2);
-            
+
             // Atribui a lista de strings (URLs) vinda do banco
             imagensAtuais = produto.imagensUrls || [];
             indiceAtual = 0;
@@ -169,30 +313,30 @@ function executarPesquisa(termo) {
         }
 
         function atualizarCarrossel() {
-    const imgTag = document.getElementById("previewImagem");
-    const indicador = document.getElementById("indicadorImagem");
+            const imgTag = document.getElementById("previewImagem");
+            const indicador = document.getElementById("indicadorImagem");
 
-    if (imagensAtuais.length > 0) {
-        // PEGA A STRING DO BANCO DE DADOS
-        let urlImagem = imagensAtuais[indiceAtual];
+            if (imagensAtuais.length > 0) {
+                // PEGA A STRING DO BANCO DE DADOS
+                let urlImagem = imagensAtuais[indiceAtual];
 
-        // SE O QUE ESTIVER NO BANCO NÃO COMEÇAR COM "http", ADICIONA O SERVIDOR DO SPRING BOOT NA FRENTE
-        if (!urlImagem.startsWith("http")) {
-            // Se a string já vier com "/uploads/imagens/...", use assim:
-            urlImagem = `http://localhost:8080${urlImagem}`;
-            
-            // OBSERVAÇÃO: Se no banco estiver gravado APENAS o nome do arquivo (ex: "06c9d9..._download.jfif"),
-            // use a linha abaixo desmarcada:
-            // urlImagem = `http://localhost:8080/uploads/imagens/${urlImagem}`;
+                // SE O QUE ESTIVER NO BANCO NÃO COMEÇAR COM "http", ADICIONA O SERVIDOR DO SPRING BOOT NA FRENTE
+                if (!urlImagem.startsWith("http")) {
+                    // Se a string já vier com "/uploads/imagens/...", use assim:
+                    urlImagem = `http://localhost:8080${urlImagem}`;
+
+                    // OBSERVAÇÃO: Se no banco estiver gravado APENAS o nome do arquivo (ex: "06c9d9..._download.jfif"),
+                    // use a linha abaixo desmarcada:
+                    // urlImagem = `http://localhost:8080/uploads/imagens/${urlImagem}`;
+                }
+
+                imgTag.src = urlImagem;
+                indicador.innerText = `${indiceAtual + 1} de ${imagensAtuais.length}`;
+            } else {
+                imgTag.src = "https://placehold.co";
+                indicador.innerText = "0 de 0";
+            }
         }
-
-        imgTag.src = urlImagem;
-        indicador.innerText = `${indiceAtual + 1} de ${imagensAtuais.length}`;
-    } else {
-        imgTag.src = "https://placehold.co";
-        indicador.innerText = "0 de 0";
-    }
-}
 
         function mudarImagem(direcao) {
             if (imagensAtuais.length === 0) return;
@@ -207,7 +351,7 @@ function executarPesquisa(termo) {
         }
 
         // Fecha o modal caso o usuário clique fora da caixa branca
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById("modalProduto");
             if (event.target === modal) {
                 fecharModal();
@@ -215,4 +359,5 @@ function executarPesquisa(termo) {
         }
     </script>
 </body>
+
 </html>
