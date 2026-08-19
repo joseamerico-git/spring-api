@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://googleapis.com">
     <title>Gerenciador de Produtos</title>
     <style>
         body {
@@ -55,6 +54,7 @@
         /* Estilo do Modal */
         .modal {
             display: none;
+
             position: fixed;
             z-index: 1000;
             left: 0;
@@ -66,10 +66,11 @@
 
         .modal-content {
             background-color: white;
-            margin: 10% auto;
-            padding: 25px;
+            margin: 3% auto;
+            padding: 15px;
+            padding-bottom: 5px;
             border-radius: 8px;
-            width: 450px;
+            width: 380px;
             position: relative;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
@@ -138,14 +139,12 @@
 
         .icone-tabela {
             color: #007bff;
-            /* Cor azul combinando com o tema */
             vertical-align: middle;
             transition: transform 0.2s;
         }
 
         tr:hover .icone-tabela {
             transform: scale(1.2);
-            /* Dá um leve zoom no ícone quando passa o mouse na linha */
         }
     </style>
 </head>
@@ -161,48 +160,56 @@
 
     <table id="tabelaProdutos">
         <thead>
-    <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>Preço</th>
-        <th style="text-align: center;">Ação</th> <!-- Nova coluna para o ícone -->
-    </tr>
-</thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Preço</th>
+                <th style="text-align: center;">Ação</th>
+            </tr>
+        </thead>
         <tbody>
             <tr>
-                <td colspan="3" style="text-align: center; color: #777;">Digite algo para iniciar a busca...</td>
+                <td colspan="4" style="text-align: center; color: #777;">Digite algo para iniciar a busca...</td>
             </tr>
         </tbody>
     </table>
 
-    <!-- MODAL DE DETALHES -->
+      <!-- MODAL DE EDIÇÃO -->
     <div id="modalProduto" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="fecharModal()">&times;</span>
-            <h3 id="modalNome">Nome do Produto</h3>
-            <p><strong>Preço:</strong> R$ <span id="modalPreco">0.00</span></p>
+            <h3>✏️ Editar Produto</h3>
+            
+            <!-- Campo oculto para armazenar o ID do produto -->
+            <input type="hidden" id="modalId">
 
-            <!-- CARROSSEL -->
+            <div style="margin-bottom: 12px;">
+                <label for="modalNome" style="display:block; font-weight:bold; margin-bottom:4px;">Nome:</label>
+                <input type="text" id="modalNome" style="width:100%; padding:8px; box-sizing:border-box;">
+            </div>
+
+            <div style="margin-bottom: 12px;">
+                <label for="modalPreco" style="display:block; font-weight:bold; margin-bottom:4px;">Preço (R$):</label>
+                <input type="number" step="0.01" id="modalPreco" style="width:100%; padding:8px; box-sizing:border-box;">
+            </div>
+
+            <!-- CARROSSEL (Visualização das Imagens Atuais) -->
             <div class="carousel-container">
-                <button class="btn-nav" onclick="mudarImagem(-1)">&#10094;</button>
+                <button class="btn-nav" onclick="mudarImagem(-1)">❮</button>
                 <div class="image-box">
                     <img id="previewImagem" src="" alt="Imagem do produto">
                 </div>
-                <button class="btn-nav" onclick="mudarImagem(1)">&#10095;</button>
+                <button class="btn-nav" onclick="mudarImagem(1)">❯</button>
             </div>
-            <div id="indicadorImagem">0 / 0</div>
+            <div id="indicadorImagem" style="margin-bottom: 20px;">0 / 0</div>
+
+            <!-- Botão de Ação -->
+            <button onclick="salvarAlteracoes()" style="width:100%; background:#28a745; color:white; border:none; padding:12px; font-size:16px; border-radius:4px; cursor:pointer; font-weight:bold;">
+                Salvar Alterações
+            </button>
         </div>
     </div>
-
     <script>
-        // --- DADOS MOCKADOS (Substitua pela chamada do seu Spring Boot) ---
-        const produtosFake = [
-            { id: 1, nome: "Teclado Mecânico RGB", preco: 299.90, imagensUrls: ["https://picsum.photos", "https://picsum.photos"] },
-            { id: 2, nome: "Mouse Gamer Pro", preco: 150.00, imagensUrls: ["https://picsum.photos", "https://picsum.photos", "https://picsum.photos"] },
-            { id: 3, nome: "Monitor 24 Polegadas", preco: 899.00, imagensUrls: ["https://picsum.photos"] },
-            { id: 4, nome: "Fone de Ouvido Bluetooth", preco: 199.90, imagensUrls: [] }
-        ];
-
         let timeoutBusca = null;
         let imagensAtuais = [];
         let indiceAtual = 0;
@@ -217,94 +224,82 @@
                 return;
             }
 
-            // Aguarda 1000ms (1 segundo) antes de executar a pesquisa
+            // Aguarda 1000ms antes de executar a pesquisa
             timeoutBusca = setTimeout(() => {
                 executarPesquisa(termo);
             }, 1000);
         }
 
-        // 2. Executa a filtragem na lista (Aqui você fará o fetch para o Spring Boot)
-
-        // 2. Executa a filtragem na lista (Aqui você fará o fetch para o Spring Boot)
-        // Substitua a função executarPesquisa antiga por esta:
+        // 2. Executa a filtragem via Fetch HTTP GET para o back-end Spring Boot
         function executarPesquisa(termo) {
-            // Faz a requisição HTTP GET para o seu servidor local passando o termo digitado
             fetch(`http://localhost:8080/produtos/buscar?nome=${encodeURIComponent(termo)}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error("Erro na resposta do servidor");
                     }
-                    return response.json(); // Transforma a resposta em JSON
+                    return response.json();
                 })
                 .then(dados => {
-                    // Envia a lista de produtos retornada pelo Spring Boot para preencher a tabela
                     renderizarTabela(dados);
                 })
                 .catch(err => {
                     console.error("Erro ao buscar dados do Spring Boot:", err);
                     const tbody = document.querySelector("#tabelaProdutos tbody");
-                    tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">Erro ao conectar com o servidor.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: red;">Erro ao conectar com o servidor.</td></tr>`;
                 });
         }
-        // 3. Renderiza as linhas na tabela dinamicamente
+
+        // 3. Renderiza as linhas na tabela dinamicamente sem acumular dados velhos
         function renderizarTabela(listaProdutos) {
             const tbody = document.querySelector("#tabelaProdutos tbody");
-            tbody.innerHTML = "";
+            tbody.innerHTML = ""; // Limpa a tabela antes de preencher
 
             if (listaProdutos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">Nenhum produto encontrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: red;">Nenhum produto encontrado.</td></tr>`;
                 return;
             }
 
-
             listaProdutos.forEach(produto => {
                 const tr = document.createElement("tr");
-
-                // Adicionamos a tag <i class="material-icons"> com o ícone "visibility" (olho) ou "search" (lupa)
-                tr.innerHTML = `
-        <td>${produto.id}</td>
-        <td>${produto.nome}</td>
-        <td>R$ ${produto.preco.toFixed(2)}</td>
-        <td style="text-align: center; width: 50px;">
-            <i class="material-icons icone-tabela">visibility</i>
-        </td>
-    `;
-
-                // Mantém a mesma lógica de clique para abrir o modal
                 tr.onclick = () => abrirModal(produto);
-                tbody.appendChild(tr);
-            });
 
-
-            listaProdutos.forEach(produto => {
-                const tr = document.createElement("tr");
                 tr.innerHTML = `
                     <td>${produto.id}</td>
                     <td>${produto.nome}</td>
                     <td>R$ ${produto.preco.toFixed(2)}</td>
-                    <td> <i class="material-icons icone-tabela">visibility</i></td>
-                    
+                    <td style="text-align: center;">
+                        <span class="icone-tabela">👁️</span>
+                    </td>
                 `;
-                // Ao clicar na linha, abre o modal enviando o objeto inteiro do produto
-                tr.onclick = () => abrirModal(produto);
                 tbody.appendChild(tr);
             });
         }
 
+        // 4. Reseta o estado inicial da tabela
         function limparTabela() {
-            document.querySelector("#tabelaProdutos tbody").innerHTML = `<tr><td colspan="3" style="text-align: center; color: #777;">Digite algo para iniciar a busca...</td></tr>`;
+            const tbody = document.querySelector("#tabelaProdutos tbody");
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Digite algo para iniciar a busca...</td></tr>`;
         }
 
-        // 4. Funções de Controle do Modal e do Carrossel
+        // 5. Controle de abertura e exibição do Modal
+           // 5. Controle de abertura e preenchimento do Modal de Edição
         function abrirModal(produto) {
-            document.getElementById("modalNome").innerText = produto.nome;
-            document.getElementById("modalPreco").innerText = produto.preco.toFixed(2);
+            // Preenche os inputs com os valores atuais do produto clicado
+            document.getElementById("modalId").value = produto.id;
+            document.getElementById("modalNome").value = produto.nome;
+            document.getElementById("modalPreco").value = produto.preco;
 
-            // Atribui a lista de strings (URLs) vinda do banco
-            imagensAtuais = produto.imagensUrls || [];
+            // Mantém a lógica de carrossel de fotos existente
+            if (!produto.imagensUrls || produto.imagensUrls.length === 0) {
+                imagensAtuais = ["https://picsum.photos"];
+            } else {
+                imagensAtuais = produto.imagensUrls.map(url => 
+                    url === "https://picsum.photos" ? "https://picsum.photos" : url
+                );
+            }
+
             indiceAtual = 0;
-
-            atualizarCarrossel();
+            exibirImagem();
             document.getElementById("modalProduto").style.display = "block";
         }
 
@@ -312,50 +307,80 @@
             document.getElementById("modalProduto").style.display = "none";
         }
 
-        function atualizarCarrossel() {
-            const imgTag = document.getElementById("previewImagem");
+        function exibirImagem() {
+            const imgElement = document.getElementById("previewImagem");
             const indicador = document.getElementById("indicadorImagem");
 
-            if (imagensAtuais.length > 0) {
-                // PEGA A STRING DO BANCO DE DADOS
-                let urlImagem = imagensAtuais[indiceAtual];
-
-                // SE O QUE ESTIVER NO BANCO NÃO COMEÇAR COM "http", ADICIONA O SERVIDOR DO SPRING BOOT NA FRENTE
-                if (!urlImagem.startsWith("http")) {
-                    // Se a string já vier com "/uploads/imagens/...", use assim:
-                    urlImagem = `http://localhost:8080${urlImagem}`;
-
-                    // OBSERVAÇÃO: Se no banco estiver gravado APENAS o nome do arquivo (ex: "06c9d9..._download.jfif"),
-                    // use a linha abaixo desmarcada:
-                    // urlImagem = `http://localhost:8080/uploads/imagens/${urlImagem}`;
-                }
-
-                imgTag.src = urlImagem;
-                indicador.innerText = `${indiceAtual + 1} de ${imagensAtuais.length}`;
-            } else {
-                imgTag.src = "https://placehold.co";
-                indicador.innerText = "0 de 0";
-            }
+            imgElement.src = imagensAtuais[indiceAtual];
+            indicador.innerText = `${indiceAtual + 1} / ${imagensAtuais.length}`;
         }
 
         function mudarImagem(direcao) {
-            if (imagensAtuais.length === 0) return;
-
             indiceAtual += direcao;
 
-            // Cria o efeito de loop infinito no carrossel
-            if (indiceAtual >= imagensAtuais.length) indiceAtual = 0;
-            if (indiceAtual < 0) indiceAtual = imagensAtuais.length - 1;
+            if (indiceAtual >= imagensAtuais.length) {
+                indiceAtual = 0;
+            } else if (indiceAtual < 0) {
+                indiceAtual = imagensAtuais.length - 1;
+            }
 
-            atualizarCarrossel();
+            exibirImagem();
         }
 
-        // Fecha o modal caso o usuário clique fora da caixa branca
+        // Fecha o modal caso o usuário clique fora dele
         window.onclick = function (event) {
             const modal = document.getElementById("modalProduto");
             if (event.target === modal) {
                 fecharModal();
             }
+        }
+
+          function salvarAlteracoes() {
+            const id = document.getElementById("modalId").value;
+            const nome = document.getElementById("modalNome").value.trim();
+            const preco = parseFloat(document.getElementById("modalPreco").value);
+
+            if (!nome || isNaN(preco)) {
+                alert("Por favor, preencha todos os campos corretamente.");
+                return;
+            }
+
+            // Monta o payload exatamente como seu back-end espera receber
+            const produtoAtualizado = {
+                id: parseInt(id),
+                nome: nome,
+                preco: preco,
+                imagensUrls: imagensAtuais // Envia as mesmas mídias vinculadas
+            };
+
+            // Faz a requisição HTTP PUT para o seu endpoint de atualização
+            fetch(`http://localhost:8080/produtos/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(produtoAtualizado)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Erro ao atualizar o produto no servidor.");
+                }
+                return response.json();
+            })
+            .then(dados => {
+                alert("Produto atualizado com sucesso!");
+                fecharModal();
+                
+                // Atualiza a tabela chamando a pesquisa novamente com o termo que já está no input
+                const termoAtual = document.getElementById("inputBusca").value.trim();
+                if (termoAtual !== "") {
+                    executarPesquisa(termoAtual);
+                }
+            })
+            .catch(err => {
+                console.error("Erro na atualização:", err);
+                alert("Não foi possível atualizar os dados. Verifique a conexão com o back-end.");
+            });
         }
     </script>
 </body>

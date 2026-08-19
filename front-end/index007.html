@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar e Atualizar Produtos</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover: #0056b3;
+            --success-color: #28a745;
+            --success-hover: #218838;
+            --danger-color: #dc3545;
+            --gray-color: #6c757d;
+            --gray-hover: #5a6268;
+            --bg-color: #f4f7f6;
+        }
+
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background-color: var(--bg-color); 
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .search-box { margin-bottom: 20px; }
+        
+        input[type="text"], input[type="number"], input[type="file"] { 
+            padding: 10px; 
+            width: 100%;
+            max-width: 300px; 
+            font-size: 16px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            box-sizing: border-box;
+        }
+
+        button { 
+            padding: 10px 15px; 
+            font-size: 16px; 
+            background-color: var(--primary-color); 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            transition: background 0.2s;
+        }
+        button:hover { background-color: var(--primary-hover); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #e9ecef; }
+        
+        tbody tr { cursor: pointer; transition: background 0.2s; }
+        tbody tr:hover { background-color: #f1f3f5; }
+        
+        .sem-resultados { color: #666; font-style: italic; margin-top: 10px; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); box-sizing: border-box;
+        }
+        .modal-content h3 { margin-top: 0; }
+        .modal-content .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+        .modal-content label { margin-bottom: 5px; font-weight: bold; }
+        .modal-content input { max-width: 100%; width: 100%; }
+        
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .btn-salvar { background-color: var(--success-color); }
+        .btn-salvar:hover { background-color: var(--success-hover); }
+        .btn-cancelar { background-color: var(--gray-color); }
+        .btn-cancelar:hover { background-color: var(--gray-hover); }
+   /* Área de Preview de Imagens (Estilo Ícones Quadrados) */
+        .preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .preview-item {
+            position: relative;
+            width: 52px;  /* Tamanho intermediário equilibrado */
+            height: 52px; /* Proporção 1:1 perfeita para ícones */
+            border: 1px solid #ced4da;
+            border-radius: 6px; /* Cantos suavemente arredondados */
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Recorta centralizado sem distorcer o produto */
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <h2>Buscar e Editar Produtos</h2>
+        
+        <div class="search-box">
+            <input type="text" id="campoBusca" placeholder="Digite o nome ou parte dele...">
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Preço (R$)</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaResultados"></tbody>
+        </table>
+
+        <div id="mensagem" class="sem-resultados">Digite algo para iniciar a busca.</div>
+    </main>
+
+    <!-- Estrutura do Modal -->
+    <div id="meuModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Editar Produto</h3>
+            <form id="formEditar">
+                <input type="hidden" id="editId">
+                
+                <div class="form-group">
+                    <label for="editNome">Nome:</label>
+                    <input type="text" id="editNome" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editPreco">Preço (R$):</label>
+                    <input type="number" id="editPreco" step="0.01" required>
+                </div>
+
+             <div class="form-group">
+                    <label for="campoImagem">Fotos do Produto (Selecione uma ou mais):</label>
+                    <input type="file" id="campoImagem" accept="image/*" multiple onchange="mostrarPreview(this)">
+                    <!-- Nova div para renderizar as miniaturas -->
+                    <div id="previewImagens" class="preview-container"></div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let timeoutBusca;
+
+        // Monitora a digitação com Debounce
+        document.getElementById('campoBusca').addEventListener('input', function() {
+            clearTimeout(timeoutBusca);
+            timeoutBusca = setTimeout(() => { realizarBusca(); }, 300); 
+        });
+
+        async function realizarBusca() {
+            const termo = document.getElementById('campoBusca').value.trim();
+            const tabelaBody = document.getElementById('tabelaResultados');
+            const mensagem = document.getElementById('mensagem');
+            
+            if (termo === '') {
+                tabelaBody.innerHTML = '';
+                mensagem.innerText = 'Digite algo para iniciar a busca.';
+                return;
+            }
+
+            try {
+                const url = `http://localhost:8080/produtos/buscar?nome=${encodeURIComponent(termo)}`;
+                const resposta = await fetch(url);
+                const produtos = await resposta.json();
+
+                tabelaBody.innerHTML = '';
+
+                if (produtos.length === 0) {
+                    mensagem.innerText = 'Nenhum produto encontrado.';
+                    return;
+                }
+
+                mensagem.innerText = '';
+
+                produtos.forEach(produto => {
+                    const linha = document.createElement('tr');
+                    linha.innerHTML = `
+                        <td>${produto.id}</td>
+                        <td>${produto.nome}</td>
+                        <td>R$ ${produto.preco.toFixed(2)}</td>
+                    `;
+                    
+                    linha.onclick = () => abrirModal(produto);
+                    tabelaBody.appendChild(linha);
+                });
+
+            } catch (erro) {
+                tabelaBody.innerHTML = '';
+                mensagem.innerText = 'Erro ao buscar dados: ' + erro.message;
+            }
+        }
+
+        function abrirModal(produto) {
+            document.getElementById('editId').value = produto.id;
+            document.getElementById('editNome').value = produto.nome;
+            document.getElementById('editPreco').value = produto.preco;
+            document.getElementById('campoImagem').value = ''; // Limpa o input de arquivo anterior
+            document.getElementById('previewImagens').innerHTML = ''; // Limpa os previews antigos
+           
+            document.getElementById('meuModal').style.display = 'flex';
+        }
+
+        // Função que lê os arquivos locais e gera as miniaturas na tela
+        function mostrarPreview(input) {
+            const container = document.getElementById('previewImagens');
+            container.innerHTML = ''; // Limpa a seleção anterior
+
+            if (input.files && input.files.length > 0) {
+                Array.from(input.files).forEach(arquivo => {
+                    // Instancia o leitor de arquivos do navegador
+                    const reader = new FileReader();
+
+                    reader.onload = function(e) {
+                        // Cria a estrutura HTML da miniatura
+                        const item = document.createElement('div');
+                        item.className = 'preview-item';
+
+                        const img = document.createElement('img');
+                        img.src = e.target.result; // URL em Base64 gerada temporariamente
+                        img.alt = arquivo.name;
+
+                        item.appendChild(img);
+                        container.appendChild(item);
+                    };
+
+                    // Lê a imagem e aciona o evento onload acima
+                    reader.readAsDataURL(arquivo);
+                });
+            }
+        }
+
+        function fecharModal() {
+            document.getElementById('meuModal').style.display = 'none';
+        }
+
+        // Envia a imagem separadamente se houver arquivo selecionado
+        async function enviarFoto(idProduto) {
+            const inputImagem = document.getElementById('campoImagem');
+            if (inputImagem.files.length === 0) return true; // Nenhuma foto para enviar, prossegue
+
+            const formData = new FormData();
+            formData.append("imagem", inputImagem.files[0]);
+
+            try {
+                const resposta = await fetch(`http://localhost:8080/produtos/${idProduto}/upload-imagem`, {
+                    method: "POST",
+                    body: formData
+                });
+                return resposta.ok;
+            } catch (erro) {
+                console.error("Erro no upload da imagem:", erro);
+                return false;
+            }
+        }
+
+        // Salva os dados textuais e depois envia a imagem se houver
+        document.getElementById('formEditar').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('editId').value;
+            const nome = document.getElementById('editNome').value;
+            const preco = parseFloat(document.getElementById('editPreco').value);
+          
+            const dadosAtualizados = { nome: nome, preco: preco };
+
+            try {
+                const url = `http://localhost:8080/produtos/${id}`;
+                const resposta = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dadosAtualizados)
+                });
+
+                if (resposta.ok) {
+                    // Executa o envio da foto após salvar os dados textuais com sucesso
+                    const fotoEnviada = await enviarFoto(id);
+                    
+                    if(fotoEnviada) {
+                        alert('Produto e imagem atualizados com sucesso!');
+                    } else {
+                        alert('Produto atualizado, mas houve erro ao enviar a imagem.');
+                    }
+                    
+                    fecharModal();
+                    realizarBusca(); // Atualiza a tabela em tempo real
+                } else {
+                    alert('Erro ao atualizar dados do produto.');
+                }
+            } catch (erro) {
+                alert('Erro na requisição: ' + erro.message);
+            }
+        });
+    </script>
+</body>
+</html>
