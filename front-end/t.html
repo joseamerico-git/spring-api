@@ -211,7 +211,11 @@
             </button>
         </div>
     </div>
+
     <script>
+        // Configuração da URL Base do Spring Boot
+        const URL_BACKEND = "http://localhost:8080";
+
         let timeoutBusca = null;
         let imagensAtuais = [];
         let indiceAtual = 0;
@@ -233,8 +237,8 @@
         }
 
         // 2. Executa a filtragem via Fetch HTTP GET para o back-end Spring Boot
-        function executarPesquisa(termo) {
-            fetch(`http://localhost:8080/produtos/buscar?nome=${encodeURIComponent(termo)}`)
+        function ejecutarPesquisa(termo) {
+            fetch(`${URL_BACKEND}/produtos/buscar?nome=${encodeURIComponent(termo)}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error("Erro na resposta do servidor");
@@ -263,132 +267,86 @@
 
             listaProdutos.forEach(produto => {
                 const tr = document.createElement("tr");
-                tr.onclick = () => abrirModal(produto);
 
+                // Monta a linha com ID, Nome, Preço e o botão de Olho
                 tr.innerHTML = `
                     <td>${produto.id}</td>
                     <td>${produto.nome}</td>
                     <td>R$ ${produto.preco.toFixed(2)}</td>
                     <td style="text-align: center;">
-                        <span class="icone-tabela">👁️</span>
+                        <span class="icone-tabela" title="Ver/Editar Produto">👁️</span>
                     </td>
                 `;
+
+                // Configura o evento de clique na linha para abrir o modal
+                tr.onclick = () => abrirModal(produto);
                 tbody.appendChild(tr);
             });
         }
 
-        // 4. Reseta o estado inicial da tabela
         function limparTabela() {
             const tbody = document.querySelector("#tabelaProdutos tbody");
             tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Digite algo para iniciar a busca...</td></tr>`;
         }
 
-        // 5. Controle de abertura e exibição do Modal
-        // 5. Controle de abertura e preenchimento do Modal de Edição
+        // 4. Abre o Modal e Preenche as Informações do Produto Selecionado
         function abrirModal(produto) {
-            // Preenche os inputs com os valores atuais do produto clicado
             document.getElementById("modalId").value = produto.id;
             document.getElementById("modalNome").value = produto.nome;
             document.getElementById("modalPreco").value = produto.preco;
-            const URL_BACKEND = "http://localhost:8080";
 
+            // Tratamento das Imagens (Configurando o link do Backend Spring Boot)
             if (!produto.imagensUrls || produto.imagensUrls.length === 0) {
-                imagensAtuais = ["https://picsum.photos"]; // Adicionado tamanho para o Picsum não quebrar
+                imagensAtuais = ["https://picsum.photos"];
             } else {
-                // 2. Mapeia a lista e adiciona o 'http://localhost:8080' se não for o Picsum
+                // Percorre a lista e concatena o 'http://localhost:8080' se a imagem for interna
                 imagensAtuais = produto.imagensUrls.map(url => {
                     if (url.startsWith("http")) {
-                        return url; // Se já tiver HTTP (como o Picsum), mantém original
+                        return url; // Se for o Picsum ou link completo, mantém
                     }
-                    return `${URL_BACKEND}${url}`; // Se for do banco (/uploads/...), junta com o backend
+                    return ${URL_BACKEND}
+                    ${ url };
+                    // Se for do banco (/uploads/...), junta com o back
                 });
-            }
-
-            indiceAtual = 0;
-            exibirImagem();
+            } indiceAtual = 0; exibirImagem();
+            // // Exibe o modal na tela
             document.getElementById("modalProduto").style.display = "block";
         }
+        // 5. Controla a Exibição e Navegação das Imagens do Carrosselfunction 
+        exibirImagem()
+    
+            const imgElement = document.getElementById("previewImagem"); const indicador = document.getElementById("indicadorImagem"); if (imagensAtuais.length > 0)
+             {
+                imgElement.src = imagensAtuais[indiceAtual]; 
+                indicador.innerText = `${indiceAtual + 1 } / ${imagensAtuais.length};} else {imgElement.src = "";indicador.innerText = "0 / 0";
 
-        function fecharModal() {
-            document.getElementById("modalProduto").style.display = "none";
-        }
-
-        function exibirImagem() {
-            const imgElement = document.getElementById("previewImagem");
-            const indicador = document.getElementById("indicadorImagem");
-
-            imgElement.src = imagensAtuais[indiceAtual];
-            indicador.innerText = `${indiceAtual + 1} / ${imagensAtuais.length}`;
-        }
-
-        function mudarImagem(direcao) {
-            indiceAtual += direcao;
-
-            if (indiceAtual >= imagensAtuais.length) {
-                indiceAtual = 0;
-            } else if (indiceAtual < 0) {
-                indiceAtual = imagensAtuais.length - 1;
             }
-
-            exibirImagem();
-        }
-
-        // Fecha o modal caso o usuário clique fora dele
-        window.onclick = function (event) {
-            const modal = document.getElementById("modalProduto");
-            if (event.target === modal) {
-                fecharModal();
-            }
-        }
-
+        } function mudarImagem(direcao) {
+            if (imagensAtuais.length === 0) return; indiceAtual += direcao;
+            // Cria o efeito de carrossel infinito (vai para a última ou primeira imagem se estourar o limite)
+            if (indiceAtual >= imagensAtuais.length) { indiceAtual = 0; } else if (indiceAtual < 0) { indiceAtual = imagensAtuais.length - 1; } exibirImagem();
+        } function fecharModal() { document.getElementById("modalProduto").style.display = "none"; }
+        // Fecha o modal caso o usuário clique em qualquer lugar fora da caixa branca
+        window.onclick = function (event) { const modal = document.getElementById("modalProduto"); if (event.target === modal) { fecharModal(); } }
+        // 6. Envia as modificações de Nome e Preço de volta para a API (Via JSON)
         function salvarAlteracoes() {
-            const id = document.getElementById("modalId").value;
-            const nome = document.getElementById("modalNome").value.trim();
-            const preco = parseFloat(document.getElementById("modalPreco").value);
+            const id = document.getElementById("modalId").value; const nome = document.getElementById("modalNome").value.trim(); const preco = parseFloat(document.getElementById("modalPreco").value); if (!nome || isNaN(preco)) { alert("Preencha todos os campos corretamente."); return; }
+            // Recupera a lista original limpando a URL base para enviar apenas o caminho relativo
+            const caminhosOriginais = imagensAtuais.map(url => {
+                if (url.startsWith(URL_BACKEND)) {
+                    return url.replace(URL_BACKEND, "");
 
-            if (!nome || isNaN(preco)) {
-                alert("Por favor, preencha todos os campos corretamente.");
-                return;
-            }
-
-            // Monta o payload exatamente como seu back-end espera receber
-            const produtoAtualizado = {
-                id: parseInt(id),
-                nome: nome,
-                preco: preco,
-                imagensUrls: imagensAtuais // Envia as mesmas mídias vinculadas
-            };
-
-            // Faz a requisição HTTP PUT para o seu endpoint de atualização
-            fetch(`http://localhost:8080/produtos/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                } return url;
+            });
+            const produtoAtualizado =
+                { nome: nome, preco: preco, imagensUrls: caminhosOriginais };
+            fetch(`${URL_BACKEND} / produtos / ${id}`, {
+                method: "PUT",
+                headers: { "Content - Type": "application / json" },
                 body: JSON.stringify(produtoAtualizado)
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Erro ao atualizar o produto no servidor.");
-                    }
-                    return response.json();
-                })
-                .then(dados => {
-                    alert("Produto atualizado com sucesso!");
-                    fecharModal();
-
-                    // Atualiza a tabela chamando a pesquisa novamente com o termo que já está no input
-                    const termoAtual = document.getElementById("inputBusca").value.trim();
-                    if (termoAtual !== "") {
-                        executarPesquisa(termoAtual);
-                    }
-                })
-                .catch(err => {
-                    console.error("Erro na atualização:", err);
-                    alert("Não foi possível atualizar os dados. Verifique a conexão com o back-end.");
-                });
+            }).then(response => { if (!response.ok) { throw new Error("Erro ao salvar produto."); } return response.json(); }).then(dados => {
+                alert("Produto atualizado com sucesso!"); fecharModal();
+                // Atualiza a tabela com o termo que já estava digitado
+                const termo = document.getElementById("inputBusca").value.trim(); if (termo !== "") ejecutarPesquisa(termo);
+            }).catch(err => { console.error("Erro ao atualizar produto: ", err); alert("Não foi possível salvar as alterações."); });
         }
-    </script>
-</body>
-
-</html>
