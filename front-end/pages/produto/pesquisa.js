@@ -1,218 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador de Produtos</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #f4f7f6;
-        }
-
-        .search-container {
-            margin-bottom: 20px;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        /* Estilo da Tabela */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            background: white;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        th,
-        td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-
-        tr:hover {
-            background-color: #f1f1f1;
-            cursor: pointer;
-        }
-
-        /* Estilo do Modal */
-        .modal {
-            display: none;
-
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 3% auto;
-            padding: 15px;
-            padding-bottom: 5px;
-            border-radius: 8px;
-            width: 380px;
-            position: relative;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .close-btn {
-            position: absolute;
-            right: 15px;
-            top: 10px;
-            font-size: 28px;
-            cursor: pointer;
-            color: #aaa;
-        }
-
-        .close-btn:hover {
-            color: black;
-        }
-
-        /* Estilo do Carrossel */
-        .carousel-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            max-width: 350px;
-            margin: 20px auto;
-        }
-
-        .image-box {
-            width: 250px;
-            height: 250px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #ddd;
-            background-color: #fafafa;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .image-box img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-
-        .btn-nav {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-size: 18px;
-            border-radius: 4px;
-            transition: 0.2s;
-        }
-
-        .btn-nav:hover {
-            background: #0056b3;
-        }
-
-        #indicadorImagem {
-            text-align: center;
-            margin-top: 5px;
-            font-weight: bold;
-            color: #555;
-        }
-
-        .icone-tabela {
-            color: #007bff;
-            vertical-align: middle;
-            transition: transform 0.2s;
-        }
-
-        tr:hover .icone-tabela {
-            transform: scale(1.2);
-        }
-    </style>
-</head>
-
-<body>
-
-    <h2>📦 Busca de Produtos</h2>
-
-    <div class="search-container">
-        <input type="text" id="inputBusca" placeholder="Digite o nome do produto para pesquisar..."
-            oninput="dispararBuscaComDelay()">
-    </div>
-
-    <table id="tabelaProdutos">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nome</th>
-                <th>Preço</th>
-                <th style="text-align: center;">Ação</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td colspan="4" style="text-align: center; color: #777;">Digite algo para iniciar a busca...</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- MODAL DE EDIÇÃO -->
-    <div id="modalProduto" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="fecharModal()">&times;</span>
-            <h3>✏️ Editar Produto</h3>
-
-            <!-- Campo oculto para armazenar o ID do produto -->
-            <input type="hidden" id="modalId">
-
-            <div style="margin-bottom: 12px;">
-                <label for="modalNome" style="display:block; font-weight:bold; margin-bottom:4px;">Nome:</label>
-                <input type="text" id="modalNome" style="width:100%; padding:8px; box-sizing:border-box;">
-            </div>
-
-            <div style="margin-bottom: 12px;">
-                <label for="modalPreco" style="display:block; font-weight:bold; margin-bottom:4px;">Preço (R$):</label>
-                <input type="number" step="0.01" id="modalPreco"
-                    style="width:100%; padding:8px; box-sizing:border-box;">
-            </div>
-
-            <!-- CARROSSEL (Visualização das Imagens Atuais) -->
-            <div class="carousel-container">
-                <button class="btn-nav" onclick="mudarImagem(-1)">❮</button>
-                <div class="image-box">
-                    <img id="previewImagem" src="" alt="Imagem do produto">
-                </div>
-                <button class="btn-nav" onclick="mudarImagem(1)">❯</button>
-            </div>
-            <div id="indicadorImagem" style="margin-bottom: 20px;">0 / 0</div>
-
-            <!-- Botão de Ação -->
-            <button onclick="salvarAlteracoes()"
-                style="width:100%; background:#28a745; color:white; border:none; padding:12px; font-size:16px; border-radius:4px; cursor:pointer; font-weight:bold;">
-                Salvar Alterações
-            </button>
-        </div>
-    </div>
-    <script>
-        let timeoutBusca = null;
+    let timeoutBusca = null;
         let imagensAtuais = [];
         let indiceAtual = 0;
 
@@ -269,13 +55,15 @@
                     <td>${produto.id}</td>
                     <td>${produto.nome}</td>
                     <td>R$ ${produto.preco.toFixed(2)}</td>
-                    <td style="text-align: center;">
-                        <span class="icone-tabela">👁️</span>
-                    </td>
+                    
                 `;
                 tbody.appendChild(tr);
             });
         }
+
+    /* <td style="text-align: center;">
+                        <span class="icone-tabela">👁️</span>
+                    </td>*/
 
         // 4. Reseta o estado inicial da tabela
         function limparTabela() {
@@ -388,7 +176,3 @@
                     alert("Não foi possível atualizar os dados. Verifique a conexão com o back-end.");
                 });
         }
-    </script>
-</body>
-
-</html>

@@ -1,0 +1,23 @@
+    body { font-family: Arial, sans-serif; margin: 40px; background-color: #f8f9fa; display: flex; justify-content: center; }
+        .painel { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 420px; }
+        h2 { color: #333; margin-top: 0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { padding: 12px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
+        button:hover { background-color: #218838; }
+        
+        /* Grids para agrupar as múltiplas imagens do preview e resumo */
+        .preview-container { margin-top: 10px; display: none; }
+        .grid-imagens { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px; }
+        .grid-imagens img { width: 60px; height: 60px; object-fit: contain; border: 1px dashed #ccc; border-radius: 4px; padding: 2px; background: #fff; }
+        
+        #mensagem { margin-top: 15px; font-weight: bold; text-align: center; }
+        .resumo-secao { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+        
+        /* Card de Resumo Horizontal Ajustado */
+        .card-produto-mini { border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; background: #fafafa; }
+        .produto-detalhes { margin-bottom: 10px; display: flex; flex-direction: column; gap: 2px; }
+        .produto-info { font-size: 12px; color: #777; }
+        .produto-nome { font-size: 15px; font-weight: bold; color: #333; }
+        .produto-preco { font-size: 16px; color: #28a745; font-weight: bold; }
