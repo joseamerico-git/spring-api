@@ -148,7 +148,7 @@
 </div>
 
 <script>
-    const API_BASE_URL = 'http://localhost:8080/api';
+    const API_BASE_URL = 'http://localhost:8080';
 
     document.addEventListener('DOMContentLoaded', () => {
         loadDoctors();
@@ -167,7 +167,8 @@
             doctors.forEach(doctor => {
                 const option = document.createElement('option');
                 option.value = doctor.id;
-                option.textContent = `${doctor.nome} - ${doctor.especialidade}`;
+                // CORRIGIDO: Alterado doctor.especialidade para doctor.numeroCrm
+                option.textContent = `${doctor.nome} (${doctor.numeroCrm})`;
                 doctorSelect.appendChild(option);
             });
         } catch (error) {
