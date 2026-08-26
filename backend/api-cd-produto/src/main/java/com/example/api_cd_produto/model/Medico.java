@@ -27,9 +27,12 @@ public class Medico {
 	@Column(name = "numero_crm", nullable = false, unique = true)
 	private String numeroCrm;
 
-	@Lob // Define como Large Object para suportar arquivos de imagem
-	@Column(columnDefinition = "TEXT") // Armazena a foto como String Base64
-	private String fotoBase64;
+	//@Lob // Define como Large Object para suportar arquivos de imagem
+	//@Column(columnDefinition = "TEXT") // Armazena a foto como String Base64
+	//private String fotoBase64;
+	// Dentro da classe Medico
+	private String foto; // Armazenará o caminho relativo: "/uploads/imagens/arquivo.jpg"
+
 
 	public Long getId() {
 		return id;
@@ -63,13 +66,15 @@ public class Medico {
 		this.numeroCrm = numeroCrm;
 	}
 
-	public String getFotoBase64() {
-		return fotoBase64;
+	public String getFoto() {
+		return foto;
 	}
 
-	public void setFotoBase64(String fotoBase64) {
-		this.fotoBase64 = fotoBase64;
+	public void setFoto(String foto) {
+		this.foto = foto;
 	}
+
+
 	
 	
 }
