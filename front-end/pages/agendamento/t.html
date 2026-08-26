@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Médico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        /* Área do Preview e do Vídeo */
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .camera-box {
+            width: 150px;
+            height: 150px;
+            border: 2px dashed #ccc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #f9f9f9;
+        }
+        .camera-box video, .camera-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .camera-box video {
+            display: none;
+            transform: scaleX(-1); /* Efeito espelho para parecer natural */
+        }
+        .camera-box img {
+            display: none;
+        }
+        .preview-placeholder {
+            color: #aaa;
+            font-size: 12px;
+            text-align: center;
+            padding: 5px;
+        }
+
+        /* Botões da Câmera */
+        .camera-buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn-cam {
+            flex: 1;
+            padding: 8px;
+            font-size: 13px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-cam:hover { background-color: #5a6268; }
+        #btnCapturar { background-color: #28a745; display: none; }
+        #btnCapturar:hover { background-color: #218838; }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        button[type="submit"]:hover { background-color: #0056b3; }
+        #mensagem { margin-top: 15px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Cadastrar Médico</h2>
+    
+    <div class="preview-container">
+        <div class="camera-box">
+            <span id="placeholder">Sem Foto</span>
+            <video id="video" autoplay playsinline></video>
+            <img id="fotoPreview" alt="Foto capturada">
+        </div>
+        
+        <div class="camera-buttons">
+            <button type="button" class="btn-cam" id="btnIniciar">Ligar Câmera</button>
+            <button type="button" class="btn-cam" id="btnCapturar">Tirar Foto</button>
+        </div>
+    </div>
+
+    <form id="medicoForm">
+        <div class="form-group">
+            <label for="nome">Nome Completo</label>
+            <input type="text" id="nome" required placeholder="Ex: Dr. Lucas Silva">
+        </div>
+        
+        <div class="form-group">
+            <label for="celular">Celular</label>
+            <input type="text" id="celular" required placeholder="Ex: (11) 99999-8888">
+        </div>
+        
+        <div class="form-group">
+            <label for="numeroCrm">Número CRM</label>
+            <input type="text" id="numeroCrm" required placeholder="Ex: CRM/SP 123456">
+        </div>
+        
+        <button type="submit">Enviar Cadastro</button>
+    </form>
+    
+    <div id="mensagem"></div>
+</div>
+
+<!-- Canvas oculto usado apenas para processar a captura da imagem -->
+<canvas id="canvas" style="display:none;"></canvas>
+
+<script>
+    const video = document.getElementById('video');
+    const fotoPreview = document.getElementById('fotoPreview');
+    const placeholder = document.getElementById('placeholder');
+    const canvas = document.getElementById('canvas');
+    
+    const btnIniciar = document.getElementById('btnIniciar');
+    const btnCapturar = document.getElementById('btnCapturar');
+    const celularInput = document.getElementById('celular');
+
+    let streamLocal = null;
+    let fotoBase64 = ""; // Armazena a string para envio
+
+    // Máscara do celular
+    celularInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, "");
+        if (value.length > 11) value = value.slice(0, 11);
+        if (value.length > 6) value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+        else if (value.length > 2) value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+        else if (value.length > 0) value = `(${value}`;
+        e.target.value = value;
+    });
+
+    // Liga a Webcam / Câmera frontal
+    btnIniciar.addEventListener('click', async () => {
+        try {
+            // Se já tiver uma câmera ativa, desliga para reiniciar
+            if (streamLocal) {
+                streamLocal.getTracks().forEach(track => track.stop());
+            }
+
+            streamLocal = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "user" }, // "user" foca na frontal/webcam
+                audio: false
+            });
+
+            video.srcObject = streamLocal;
+            video.style.display = 'block';
+            fotoPreview.style.display = 'none';
+            placeholder.style.display = 'none';
+            
+            btnIniciar.innerText = "Reiniciar Câmera";
+            btnCapturar.style.display = 'block';
+        } catch (err) {
+            alert("Não foi possível acessar a câmera. Verifique as permissões do seu navegador.");
+            console.error(err);
+        }
+    });
+
+    // Captura a foto (Congela o frame do vídeo)
+    btnCapturar.addEventListener('click', () => {
+        if (!streamLocal) return;
+
+        // Define a resolução real da captura com base no vídeo ativo
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Aplica o efeito espelho na imagem final para ficar idêntica ao vídeo
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Transforma o resultado no formato Base64 esperado pelo seu backend
+        fotoBase64 = canvas.toDataURL('image/jpeg');
+
+        // Atualiza a interface
+        fotoPreview.src = fotoBase64;
+        fotoPreview.style.display = 'block';
+        video.style.display = 'none';
+        btnCapturar.style.display = 'none';
+
+        // Desliga a câmera para economizar hardware/bateria
+        streamLocal.getTracks().forEach(track => track.stop());
+        streamLocal = null;
+    });
+
+    // Envio do formulário
+    document.getElementById('medicoForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const msgDiv = document.getElementById('mensagem');
+        
+        if (!fotoBase64) {
+            msgDiv.innerText = "Por favor, tire uma foto antes de enviar.";
+            msgDiv.style.color = "orange";
+            return;
+        }
+
+        msgDiv.innerText = "Enviando...";
+        msgDiv.style.color = "#333";
+
+        const dadosMedico = {
+            nome: document.getElementById('nome').value,
+            celular: celularInput.value,
+            numeroCrm: document.getElementById('numeroCrm').value,
+            fotoBase64: fotoBase64
+        };
+
+        try {
+            const response = await fetch('http://localhost:8080/medicos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dadosMedico)
+            });
+
+            if (response.ok) {
+                msgDiv.innerText = "Médico cadastrado com sucesso!";
+                msgDiv.style.color = "green";
+                
+                // Reseta tudo
+                document.getElementById('medicoForm').reset();
+                fotoPreview.style.display = 'none';
+                placeholder.style.display = 'block';
+                btnIniciar.innerText = "Ligar Câmera";
+                fotoBase64 = "";
+            } else {
+                msgDiv.innerText = "Erro ao cadastrar médico.";
+                msgDiv.style.color = "red";
+            }
+        } catch (error) {
+            console.error("Erro:", error);
+            msgDiv.innerText = "Erro de conexão com o servidor.";
+            msgDiv.style.color = "red";
+        }
+    });
+</script>
+
+</body>
+</html>
