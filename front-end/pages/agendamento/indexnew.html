@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedManager - Sistema Clínico</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --sidebar-width: 260px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Menu Lateral (Sidebar) */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 24px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px 0;
+            flex-grow: 1;
+        }
+
+        .sidebar-item a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .sidebar-item a:hover,
+        .sidebar-item.active a {
+            background-color: #eff6ff;
+            color: var(--primary-color);
+            border-left: 4px solid var(--primary-color);
+            padding-left: 20px;
+        }
+
+        /* Área do Conteúdo Principal */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex-grow: 1;
+            padding: 40px;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .header-title {
+            font-size: 26px;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .header-subtitle {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        /* Grid de Painéis Rápidos (Dashboard Home) */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Seções de Atalho Rápidos */
+        .shortcuts-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .shortcuts-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .shortcut-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn-shortcut {
+            padding: 14px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-main);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-shortcut:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.08);
+        }
+
+        /* Responsividade Básica */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-bottom: 1px solid var(--border-color);
+                border-right: none;
+            }
+
+            .sidebar-menu {
+                display: flex;
+                padding: 0;
+                overflow-x: auto;
+            }
+
+            .sidebar-item a {
+                padding: 14px 16px;
+                white-space: nowrap;
+                border-left: none !important;
+                border-bottom: 3px solid transparent;
+            }
+
+            .sidebar-item.active a {
+                border-bottom-color: var(--primary-color);
+                background: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Menu Lateral Fixo -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            🏥 MedManager
+        </div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-item active" id="menuHome">
+                <a onclick="navegar('home')">🏠 Início</a>
+            </li>
+            <li class="sidebar-item" id="menuCadastro">
+                <a href="cdMedicosfinal.html">👨‍⚕️ Cadastrar Médico</a>
+            </li>
+            <li class="sidebar-item" id="menuCorpo">
+                <a href="listar_medicos1.html">📋 Corpo Clínico</a>
+            </li>
+            <li class="sidebar-item" id="menuAgenda">
+                <a href="agendamentotest.html">📅 Agendar Consulta</a>
+            </li>
+            <li class="sidebar-item" id="menuVisualiza">
+                <a href="vizualiza1.html">🔍📅 Visualizar agendamentos</a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Conteúdo Central Dinâmico -->
+    <main class="main-content" id="conteudoPrincipal">
+
+        <!-- Bloco Padrão de Boas-Vindas (Home) -->
+        <div id="viewHome">
+            <h1 class="header-title">Bem-vindo ao MedManager</h1>
+            <p class="header-subtitle">Painel administrativo e controle de agendamentos clínicos</p>
+
+            <!-- Cards Informativos -->
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <span class="stat-title">Médicos Ativos</span>
+        <span class="stat-value" id="qtdMedicos">--</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-title">Consultas Hoje</span>
+        <!-- ADICIONADO O ID AQUI -->
+        <span class="stat-value" id="consultasHoje">0</span> 
+    </div>
+    <div class="stat-card">
+        <span class="stat-title">Próximos Agendamentos</span>
+        <span class="stat-value" id="proximosAgendamentos">0</span>
+    </div>
+</div>
+
+            <!-- Ações Rápidas -->
+            <div class="shortcuts-section">
+                <h3 class="shortcuts-title">Acesso Rápido</h3>
+                <div class="shortcut-buttons">
+                    <a href="cdMedicosfinal.html" class="btn-shortcut">➕ Cadastrar Novo Médico</a>
+                    <a href="agendamentotest.html" class="btn-shortcut">📅 Agendar Consulta</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Lógica de Renderização Dinâmica -->
+    <script>
+        // Função executada assim que a página carrega
+        window.addEventListener('DOMContentLoaded', () => {
+            atualizarDashboard();
+        });
+
+        function atualizarDashboard() {
+            // Tenta buscar os dados do localStorage (caso você use no navegador)
+            // Se não encontrar nada, assume 0 como padrão
+            const medicos = JSON.parse(localStorage.getItem('medicos')) || [];
+            const agendamentos = JSON.parse(localStorage.getItem('agendamentos')) || [];
+
+            // 1. Renderiza a quantidade de Médicos Ativos
+            const totalMedicos = medicos.length;
+            document.getElementById('qtdMedicos').innerText = totalMedicos > 0 ? totalMedicos : "12"; // "12" é um exemplo fixo caso seu banco esteja vazio
+
+            const consultasHoje = agendamentos.length;
+            document.getElementById('consultasHoje').innerText = consultasHoje;
+            // 2. Renderiza a quantidade de Próximos Agendamentos
+            const totalAgendamentos = agendamentos.length;
+            document.getElementById('proximosAgendamentos').innerText = totalAgendamentos > 0 ? totalAgendamentos : "5"; // "5" é um exemplo fixo caso seu banco esteja vazio
+            
+        }
+
+        // Função de navegação simulada (caso precise dela ativa)
+        function navegar(pagina) {
+            console.log("Navegando para: " + pagina);
+        }
+    </script>
+</body>
+
+</html>

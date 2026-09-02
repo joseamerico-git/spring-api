@@ -240,9 +240,6 @@
             <li class="sidebar-item" id="menuAgenda">
                 <a href="agendamentotest.html">📅 Agendar Consulta</a>
             </li>
-                <li class="sidebar-item" id="menuAgenda">
-                <a href="vizualiza1.html">🔍📅 Visualizar agendamentos</a>
-            </li>
         </ul>
     </aside>
 
@@ -301,176 +298,43 @@
     </main>
 
     <script>
-        const API_URL = "http://localhost:8080/agendamentos";
-        let todasAsConsultas = [];
-        let idConsultaEmEdicao = null; // Armazena o ID do agendamento aberto no modal
+        const API_URL_MEDICOS = 'http://localhost:8080/medicos';
 
-        async function carregarConsultas() {
-            const corpoTabela = document.getElementById('tabelaConsultasCorpo');
+        // Busca automática a quantidade de médicos para o dashboard
+        document.addEventListener('DOMContentLoaded', carregarMetricas);
+
+        async function carregarMetricas() {
             try {
-                const response = await fetch(API_URL);
-                if (!response.ok) throw new Error();
-                todasAsConsultas = await response.json();
-                renderizarTabela(todasAsConsultas);
-            } catch (error) {
-                corpoTabela.innerHTML = `<tr><td colspan="7" class="no-data" style="color: var(--error-color);"> Não foi possível carregar as consultas. Certifique-se de que o backend está rodando. </td></tr>`;
+                const response = await fetch(API_URL_MEDICOS);
+                if (response.ok) {
+                    const medicos = await response.json();
+                    document.getElementById('qtdMedicos').textContent = medicos.length;
+                }
+            } catch (err) {
+                console.error("Não foi possível carregar contagem de médicos:", err);
             }
         }
 
-        document.getElementById('inputBusca').addEventListener('input', (e) => {
-            const termo = normalizarTexto(e.target.value);
-            const filtradas = todasAsConsultas.filter(consulta => {
-                const paciente = normalizarTexto(consulta.nomePaciente || '');
-                const medico = normalizarTexto(consulta.medico ? consulta.medico.nome : '');
-                return paciente.includes(termo) || medico.includes(termo);
-            });
-            renderizarTabela(filtradas);
-        });
+        // Função simples de navegação interna por abas ocultas/visíveis
+        function navegar(tela) {
+            const viewHome = document.getElementById('viewHome');
+            const viewAgenda = document.getElementById('viewAgenda');
+            const menuHome = document.getElementById('menuHome');
+            const menuAgenda = document.getElementById('menuAgenda');
 
-        function normalizarTexto(texto) {
-            return texto.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        }
-
-        function renderizarTabela(lista) {
-            const corpoTabela = document.getElementById('tabelaConsultasCorpo');
-            corpoTabela.innerHTML = '';
-
-            if (lista.length === 0) {
-                corpoTabela.innerHTML = `<tr><td colspan="7" class="no-data">Nenhum agendamento encontrado.</td></tr>`;
-                return;
+            if (tela === 'home') {
+                viewHome.style.display = 'block';
+                viewAgenda.style.display = 'none'; menuHome.classList.add('active');
+                menuAgenda.classList.remove('active');
             }
+            else if (tela === 'agenda') {
+                viewHome.style.display = 'none'; viewAgenda.style.display = 'block'; menuHome.classList.remove('active');
+                menuAgenda.classList.add('active');
 
-            lista.forEach(consulta => {
-                const tr = document.createElement('tr');
-
-                const dataFormatada = consulta.data ? consulta.data.split('-').reverse().join('/') : '--';
-                const nomeMedico = consulta.medico ? consulta.medico.nome : `Não informado`;
-                const especialidade = consulta.medico ? (consulta.medico.especialidade || 'Geral') : '--';
-                const horario = consulta.horario || '--';
-                const status = consulta.status ? consulta.status.toLowerCase() : 'agendado';
-                
-                let classeBadge = 'badge-agendado';
-                if (status === 'realizado') classeBadge = 'badge-realizado';
-                if (status === 'cancelado') classeBadge = 'badge-cancelado';
-                
-                tr.innerHTML = `
-                    <td>${consulta.nomePaciente || "Não informado"}</td>
-                    <td>${nomeMedico}</td>
-                    <td>${especialidade}</td>
-                    <td>${dataFormatada}</td>
-                    <td>${horario}</td>
-                    <td><span class="badge ${classeBadge}">${status}</span></td>
-                    <td>
-                        <button onclick="abrirModal(${consulta.id})" class="btn-detalhes">Editar</button>
-                    </td>
-                `;
-
-                corpoTabela.appendChild(tr);
-            });
-        }
-
-        // FUNÇÕES DO MODAL (AGORA COM FORMULÁRIO DE ALTERAÇÃO)
-        function abrirModal(id) {
-            const consulta = todasAsConsultas.find(c => c.id === id);
-            if (!consulta) return;
-            
-            idConsultaEmEdicao = id; // Salva o ID globalmente para usar no salvamento
-
-            const nomeMedico = consulta.medico ? consulta.medico.nome : '';
-            const especialidade = consulta.medico ? (consulta.medico.especialidade || 'Geral') : 'Geral';
-            const statusAtual = consulta.status ? consulta.status.toLowerCase() : 'agendado';
-            
-            const modalBody = document.getElementById('modalBody');
-            
-            // Monta o HTML interno transformando os dados em inputs maleáveis
-          // CÓDIGO JAVASCRIPT (Ajustado para a Opção 2)
-modalBody.innerHTML = `
-    <div class="form-group">
-        <label>Paciente:</label>
-        <input type="text" id="editPaciente" value="${consulta.nomePaciente || ''}" required>
-    </div>
-    <div class="form-group">
-        <label>Médico:</label>
-        <input type="text" id="editMedico" value="${nomeMedico}" required>
-    </div>
-    <div class="form-group">
-        <label>Especialidade:</label>
-        <input type="text" id="editEspecialidade" value="${especialidade}">
-    </div>
-    <div class="form-group">
-        <label>Data:</label>
-        <input type="date" id="editData" value="${consulta.data || ''}" required>
-    </div>
-    <div class="form-group">
-        <label>Horário:</label>
-        <input type="time" id="editHorario" value="${consulta.horario || ''}" required>
-    </div>
-    <div class="form-group">
-        <label>Status:</label>
-        <select id="editStatus">
-            <option value="agendado" ${statusAtual === 'agendado' ? 'selected' : ''}>Agendado</option>
-            <option value="realizado" ${statusAtual === 'realizado' ? 'selected' : ''}>Realizado</option>
-            <option value="cancelado" ${statusAtual === 'cancelado' ? 'selected' : ''}>Cancelado</option>
-        </select>
-    </div>
-`;
-
-document.getElementById('modalConsulta').classList.add('active');
-
-
-        // FUNÇÃO QUE ENVIA OS DADOS ATUALIZADOS PARA A API
-        async function salvarAlteracoes(event) {
-            event.preventDefault(); // Impede a página de recarregar
-            
-            if (!idConsultaEmEdicao) return;
-
-            // Monta o objeto com a mesma estrutura que o seu backend espera receber
-            const dadosAtualizados = {
-                id: idConsultaEmEdicao,
-                nomePaciente: document.getElementById('editPaciente').value,
-                medico: {
-                    nome: document.getElementById('editMedico').value,
-                    especialidade: document.getElementById('editEspecialidade').value
-                },
-                data: document.getElementById('editData').value,
-                horario: document.getElementById('editHorario').value,
-                status: document.getElementById('editStatus').value.toUpperCase() // Envia em caixa alta caso o back exija padrão ENUM
-            };
-
-            try {
-                const response = await fetch(`${API_URL}/${idConsultaEmEdicao}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(dadosAtualizados)
-                });
-
-                if (!response.ok) throw new Error('Erro ao salvar os dados no servidor.');
-
-                alert('Consulta atualizada com sucesso!');
-                fecharModal();
-                carregarConsultas(); // Recarrega a tabela com as novas informações vindas do banco
-            } catch (error) {
-                alert('Erro ao atualizar consulta: ' + error.message);
             }
         }
 
-        function fecharModal() {
-            document.getElementById('modalConsulta').classList.remove('active');
-            idConsultaEmEdicao = null; // Limpa a referência de edição
-        }
-
-        window.onclick = function (event) {
-            const modal = document.getElementById('modalConsulta');
-            if (event.target === modal) {
-                fecharModal();
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', carregarConsultas);
-    }
-</script>
+        </script>
 
 </body>
 </html>
