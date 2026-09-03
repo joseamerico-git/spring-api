@@ -1,11 +1,12 @@
 package com.example.api_cd_produto.model;
 
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -35,6 +36,23 @@ public class Consulta {
 
 	@Column(nullable = false)
 	private LocalTime hora;
+
+	@Enumerated(EnumType.STRING)
+	private StatusConsulta status;
+
+	// Defina o status padrão ao criar o objeto
+	public Consulta() {
+		this.status = StatusConsulta.AGENDADO;
+	}
+
+	// Getters e Setters
+	public StatusConsulta getStatus() {
+		return status;
+	}
+
+	public void setStatus(StatusConsulta status) {
+		this.status = status;
+	}
 
 	public Long getId() {
 		return id;
@@ -75,4 +93,5 @@ public class Consulta {
 	public void setHora(LocalTime hora) {
 		this.hora = hora;
 	}
+
 }

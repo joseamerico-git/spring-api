@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.api_cd_produto.model.EspecealidadeMedico;
 import com.example.api_cd_produto.model.Medico;
 import com.example.api_cd_produto.repository.MedicoRepository;
 
@@ -33,6 +34,7 @@ public class MedicoController {
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<?> cadastrarMedico(
             @RequestPart("medico") Medico medico,
+
             @RequestPart("foto") MultipartFile arquivo) {
         
         if (arquivo.isEmpty()) {
@@ -83,4 +85,18 @@ public class MedicoController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+    
+    @GetMapping("/especialidades")
+    public ResponseEntity<EspecealidadeMedico[]> listarEspecialidades() {
+        return ResponseEntity.ok(EspecealidadeMedico.values());
+    }
+    
+ // GET: Buscar médicos filtrando pela especialidade
+    @GetMapping("/filtrar")
+    public ResponseEntity<List<Medico>> filtrarPorEspecialidade(@RequestParam EspecealidadeMedico especialidade) {
+        // Nota: Certifique-se de criar o método 'findByEspecealidade' no seu MedicoRepository
+        List<Medico> medicos = medicoRepository.findByEspecealidade(especialidade);
+        return ResponseEntity.ok(medicos);
+    }
+
 }

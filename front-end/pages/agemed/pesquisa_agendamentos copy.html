@@ -8,6 +8,7 @@
     <style>
         :root {
             --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
             --background: #f8fafc;
             --card-bg: #ffffff;
             --text-main: #1e293b;
@@ -220,31 +221,25 @@
             padding-bottom: 12px;
         }
 
-        .modal-body p {
-            margin-bottom: 12px;
-            font-size: 15px;
+        .modal-header h3 {
+            font-size: 20px;
             color: var(--text-main);
-        }
-
-        .modal-body strong {
-            color: var(--text-muted);
-            display: inline-block;
-            width: 120px;
         }
 
         .btn-close {
             background: none;
             border: none;
-            font-size: 20px;
+            font-size: 24px;
             color: var(--text-muted);
             cursor: pointer;
+            line-height: 1;
         }
 
         .btn-close:hover {
             color: var(--error-color);
         }
 
-        /* --- NOVOS ESTILOS DO FORMULÁRIO INTERNO E BOTÕES DO MODAL --- */
+        /* --- ESTILOS DO FORMULÁRIO INTERNO DO MODAL --- */
         .form-group {
             margin-bottom: 16px;
             display: flex;
@@ -259,7 +254,7 @@
             color: var(--text-muted);
         }
 
-        .form-group input, 
+        .form-group input,
         .form-group select {
             width: 100%;
             padding: 10px 14px;
@@ -272,7 +267,7 @@
             transition: all 0.2s;
         }
 
-        .form-group input:focus, 
+        .form-group input:focus,
         .form-group select:focus {
             border-color: var(--primary-color);
             background-color: #fff;
@@ -316,7 +311,7 @@
         }
 
         .btn-salvar:hover {
-            background-color: #1d4ed8; /* Cor escura de destaque */
+            background-color: var(--primary-hover);
         }
     </style>
 </head>
@@ -332,6 +327,8 @@
         <div class="search-box">
             <input type="text" id="inputBusca" placeholder="🔍 Digite o nome do paciente ou do médico para filtrar...">
         </div>
+
+
 
         <div class="table-container">
             <table class="custom-table">
@@ -354,8 +351,7 @@
             </table>
         </div>
     </div>
-
-     <!-- ESTRUTURA DO MODAL DE ALTERAÇÃO -->
+    <!-- MODAL DE ALTERAÇÃO -->
     <div id="modalConsulta" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -363,11 +359,10 @@
                 <button type="button" class="btn-close" onclick="fecharModal()">&times;</button>
             </div>
             <form id="formEditarConsulta" onsubmit="salvarAlteracoes(event)">
-                
-                <!-- O JavaScript vai injetar os campos aqui dentro -->
+
+                <!-- O JavaScript vai injetar os inputs exatamente aqui dentro -->
                 <div id="modalBody"></div>
-                
-                <!-- Rodapé com os botões alinhados -->
+
                 <div class="modal-actions">
                     <button type="button" onclick="fecharModal()" class="btn-cancelar">Cancelar</button>
                     <button type="submit" class="btn-salvar">Salvar Alterações</button>
@@ -376,12 +371,10 @@
         </div>
     </div>
 
-
-
-
     <script>
         const API_URL = "http://localhost:8080/agendamentos";
         let todasAsConsultas = [];
+        let idConsultaEmEdicao = null;
 
         async function carregarConsultas() {
             const corpoTabela = document.getElementById('tabelaConsultasCorpo');
@@ -414,7 +407,7 @@
             corpoTabela.innerHTML = '';
 
             if (lista.length === 0) {
-                corpoTabela.innerHTML = `<tr><td colspan="7" class="no-data">Nenhum agendamento encontrado.</td></tr>`;
+                corpoTabela.innerHTML = '<tr><td colspan="7" class="no-data">Nenhum agendamento encontrado.</td></tr>';
                 return;
             }
 
@@ -422,26 +415,25 @@
                 const tr = document.createElement('tr');
 
                 const dataFormatada = consulta.data ? consulta.data.split('-').reverse().join('/') : '--';
-                const nomeMedico = consulta.medico ? consulta.medico.nome : `Não informado`;
+                const nomeMedico = consulta.medico ? consulta.medico.nome : 'Não informado';
                 const especialidade = consulta.medico ? (consulta.medico.especialidade || 'Geral') : '--';
-                const horario = consulta.horario || '--';
+                const hora = consulta.hora || '--';
                 const status = consulta.status ? consulta.status.toLowerCase() : 'agendado';
-                
+
                 let classeBadge = 'badge-agendado';
                 if (status === 'realizado') classeBadge = 'badge-realizado';
                 if (status === 'cancelado') classeBadge = 'badge-cancelado';
-                
-                // CORREÇÃO: Adicionado <td> para as colunas e a tag da badge
-                // CORREÇÃO: Adicionado botão de ação para acionar o modal passando o ID da consulta
+
+                // CORREÇÃO: Recuperadas as colunas <td> da tabela que tinham sumido
                 tr.innerHTML = `
-                    <td>${consulta.nomePaciente || "Não informado"}</td>
-                    <td>${nomeMedico}</td>
+                    <td><strong>${consulta.nomePaciente || "Não informado"}</strong></td>
+                    <td>Dr(a). ${nomeMedico}</td>
                     <td>${especialidade}</td>
                     <td>${dataFormatada}</td>
-                    <td>${horario}</td>
+                    <td>${hora}</td>
                     <td><span class="badge ${classeBadge}">${status}</span></td>
-                    <td>
-                        <button onclick="abrirModal(${consulta.id})" class="btn-detalhes">Ver Detalhes</button>
+                    <td class="text-center">
+                        <button type="button" onclick="abrirModal(${consulta.id})" class="btn-edit">✏️ Editar</button>
                     </td>
                 `;
 
@@ -449,55 +441,99 @@
             });
         }
 
-        // FUNÇÕES DO MODAL
         function abrirModal(id) {
-    const consulta = todasAsConsultas.find(c => c.id === id);
-    if (!consulta) return;
-    
-    idConsultaEmEdicao = id; // Armazena o ID globalmente
+            const consulta = todasAsConsultas.find(c => c.id === id);
+            if (!consulta) return;
 
-    const nomeMedico = consulta.medico ? consulta.medico.nome : '';
-    const especialidade = consulta.medico ? (consulta.medico.especialidade || 'Geral') : 'Geral';
-    const statusAtual = consulta.status ? consulta.status.toLowerCase() : 'agendado';
-    
-    const modalBody = document.getElementById('modalBody');
-    
-    // Injeta apenas os campos. O <form> e os botões de ação ficam fixos no HTML.
-    modalBody.innerHTML = `
-        <div class="form-group">
-            <label for="editPaciente">Paciente:</label>
-            <input type="text" id="editPaciente" value="${consulta.nomePaciente || ''}" required>
-        </div>
-        <div class="form-group">
-            <label for="editMedico">Médico:</label>
-            <input type="text" id="editMedico" value="${nomeMedico}" required>
-        </div>
-        <div class="form-group">
-            <label for="editEspecialidade">Especialidade:</label>
-            <input type="text" id="editEspecialidade" value="${especialidade}">
-        </div>
-        <div class="form-group">
-            <label for="editData">Data:</label>
-            <input type="date" id="editData" value="${consulta.data || ''}" required>
-        </div>
-        <div class="form-group">
-            <label for="editHorario">Horário:</label>
-            <input type="time" id="editHorario" value="${consulta.horario || ''}" required>
-        </div>
-        <div class="form-group">
-            <label for="editStatus">Status:</label>
-            <select id="editStatus">
-                <option value="agendado" ${statusAtual === 'agendado' ? 'selected' : ''}>Agendado</option>
-                <option value="realizado" ${statusAtual === 'realizado' ? 'selected' : ''}>Realizado</option>
-                <option value="cancelado" ${statusAtual === 'cancelado' ? 'selected' : ''}>Cancelado</option>
-            </select>
-        </div>
-    `;
-    
-    document.getElementById('modalConsulta').classList.add('active');
-}
+            idConsultaEmEdicao = id;
+
+            const nomeMedico = consulta.medico ? consulta.medico.nome : '';
+            const especialidade = consulta.medico ? (consulta.medico.especialidade || 'Geral') : 'Geral';
+            const statusAtual = consulta.status ? consulta.status.toLowerCase() : 'agendado';
+
+            const modalBody = document.getElementById('modalBody');
+
+            // CORREÇÃO: Recuperada toda a estrutura de inputs/labels do formulário que foi apagada
+            modalBody.innerHTML = `
+                <div class="form-group">
+                    <label for="editPaciente">Paciente:</label>
+                    <input type="text" id="editPaciente" value="${consulta.nomePaciente || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editMedico">Médico:</label>
+                    <input type="select" id="editMedico" value="${nomeMedico}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEspecialidade">Especialidade:</label>
+                    <input type="text" id="editEspecialidade" value="${especialidade}">
+                </div>
+                <div class="form-group">
+                    <label for="editData">Data:</label>
+                    <input type="date" id="editData" value="${consulta.data || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editHorario">Horário:</label>
+                    <input type="time" id="editHorario" value="${consulta.hora || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editStatus">Status:</label>
+                    <select id="editStatus">
+                        <option value="agendado" ${statusAtual === 'agendado' ? 'selected' : ''}>Agendado</option>
+                        <option value="realizado" ${statusAtual === 'realizado' ? 'selected' : ''}>Realizado</option>
+                        <option value="cancelado" ${statusAtual === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+                    </select>
+                </div>
+            `;
+
+            document.getElementById('modalConsulta').classList.add('active');
+        }
+
+        async function salvarAlteracoes(event) {
+            event.preventDefault();
+            if (!idConsultaEmEdicao) return;
+
+            // Busca os dados da consulta original para pegar o id do médico caso não tenha mudado
+            const consultaOriginal = todasAsConsultas.find(c => c.id === idConsultaEmEdicao);
+
+            // ATENÇÃO: Verifique se sua API recebe o ID do médico pelo DTO. 
+            // Se o seu HTML não tiver um select de médicos com IDs reais, usamos o id do médico que já estava gravado.
+            const medicoId = consultaOriginal && consultaOriginal.medico ? consultaOriginal.medico.id : null;
+
+            const dadosAtualizados = {
+                nomePaciente: document.getElementById('editPaciente').value,
+                medicoId: medicoId, // Envia o ID numérico que o seu dto.getMedicoId() espera
+                data: document.getElementById('editData').value,
+                hora: document.getElementById('editHorario').value,
+                status: document.getElementById('editStatus').value.toUpperCase() // Combina com o Enum StatusConsulta
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/${idConsultaEmEdicao}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dadosAtualizados)
+                });
+
+                // Captura mensagens de erro personalizadas vindas do seu Map.of("message", ...) do Spring Boot
+                if (!response.ok) {
+                    const erroData = await response.json();
+                    throw new Error(erroData.message || 'Erro ao salvar as mudanças no servidor.');
+                }
+
+                alert('Agendamento alterado com sucesso!');
+                fecharModal();
+                carregarConsultas(); // Recarrega a tabela em tempo real
+            } catch (error) {
+                alert('Erro ao salvar alterações: ' + error.message);
+            }
+        }
+
+
         function fecharModal() {
             document.getElementById('modalConsulta').classList.remove('active');
+            idConsultaEmEdicao = null;
         }
 
         window.onclick = function (event) {
@@ -507,9 +543,145 @@
             }
         }
 
-        // CORREÇÃO: Linha incompleta corrigida para carregar os dados ao abrir a página
+        async function filtrarConsultas() {
+            const inicio = document.getElementById('dataInicio').value;
+            const fim = document.getElementById('dataFim').value;
+
+            if (!inicio || !fim) {
+                alert("Por favor, preencha ambas as datas para filtrar.");
+                return;
+            }
+
+            const tbody = document.getElementById('tabelaConsultas');
+            tbody.innerHTML = '<tr><td colspan="4" style="padding: 12px; text-align: center;">Buscando...</td></tr>';
+
+            try {
+                // Envia as datas como Query Params para o endpoint criado no Spring
+                const response = await fetch(`http://localhost:8080/agendamentos/filtro-data?inicio=${inicio}&fim=${fim}`);
+
+                if (!response.ok) throw new Error("Erro ao buscar dados.");
+
+                const consultas = await response.json();
+                tbody.innerHTML = ""; // Limpa a mensagem de carregamento
+
+                if (consultas.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="padding: 12px; text-align: center; color: var(--text-muted);">Nenhuma consulta encontrada neste período.</td></tr>';
+                    return;
+                }
+
+                // Preenche as linhas da tabela com o retorno da API
+                consultas.forEach(consulta => {
+                    // Formata a data de AAAA-MM-DD para o formato brasileiro DD/MM/AAAA
+                    const dataFormatada = consulta.data.split('-').reverse().join('/');
+
+                    const linha = `
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">${consulta.nomePaciente}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">${consulta.medico ? consulta.medico.nome : 'Não informado'}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">${dataFormatada}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">${consulta.hora}</td>
+                </tr>
+            `;
+                    tbody.innerHTML += linha;
+                });
+
+            } catch (error) {
+                console.error("Erro no filtro:", error);
+                tbody.innerHTML = '<tr><td colspan="4" style="padding: 12px; text-align: center; color: red;">Não foi possível carregar as consultas.</td></tr>';
+            }
+        }
+        async function filtrarConsultas() {
+            const inicio = document.getElementById('dataInicio').value;
+            const fim = document.getElementById('dataFim').value;
+
+            if (!inicio || !fim) {
+                alert("Por favor, preencha ambas as datas para filtrar.");
+                return;
+            }
+
+            const tbody = document.getElementById('tabelaConsultas');
+            tbody.innerHTML = '<tr><td colspan="4" style="padding: 12px; text-align: center;">Buscando...</td></tr>';
+
+            try {
+                // Envia as datas como Query Params para o endpoint criado no Spring
+                const response = await fetch(`http://localhost:8080/agendamentos/filtro-data?inicio=${inicio}&fim=${fim}`);
+
+                if (!response.ok) throw new Error("Erro ao buscar dados.");
+
+                const consultas = await response.json();
+                tbody.innerHTML = ""; // Limpa a mensagem de carregamento
+
+                if (consultas.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="padding: 12px; text-align: center; color: var(--text-muted);">Nenhuma consulta encontrada neste período.</td></tr>';
+                    return;
+                }
+
+                // Preenche as linhas da tabela com o retorno da API
+                consultas.forEach(consulta => {
+                    // Formata a data de AAAA-MM-DD para o formato brasileiro DD/MM/AAAA
+                    const dataFormatada = consulta.data.split('-').reverse().join('/');
+
+                    const linha = `
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">${consulta.nomePaciente}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">${consulta.medico ? consulta.medico.nome : 'Não informado'}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">${dataFormatada}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">${consulta.hora}</td>
+                </tr>
+            `;
+                    tbody.innerHTML += linha;
+                });
+
+            } catch (error) {
+                console.error("Erro no filtro:", error);
+                tbody.innerHTML = '<tr><td colspan="4" style="padding: 12px; text-align: center; color: red;">Não foi possível carregar as consultas.</td></tr>';
+            }
+        }
+
+
         window.addEventListener('DOMContentLoaded', carregarConsultas);
-</script>
+
+
+    </script>
+
+    
+  <div class="shortcuts-section" style="margin-top: 24px;">
+    <h3 class="shortcuts-title">🔍 Filtrar Consultas por Período</h3>
+    
+    <div style="display: flex; gap: 16px; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap;">
+        <div>
+            <label style="display:block; margin-bottom:4px; font-weight:600;">Data Inicial:</label>
+            <input type="date" id="dataInicio" style="padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+        </div>
+        <div>
+            <label style="display:block; margin-bottom:4px; font-weight:600;">Data Final:</label>
+            <input type="date" id="dataFim" style="padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+        </div>
+        <button onclick="filtrarConsultas()" class="btn-shortcut" style="background: var(--primary-color); color: #fff; border: none; padding: 12px 24px;">
+            Filtrar
+        </button>
+    </div>
+
+    <!-- Tabela para mostrar os resultados -->
+    <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+        <thead>
+            <tr style="background: #f1f5f9; text-align: left;">
+                <th style="padding: 12px; border-bottom: 2px solid var(--border-color);">Paciente</th>
+                <th style="padding: 12px; border-bottom: 2px solid var(--border-color);">Médico</th>
+                <th style="padding: 12px; border-bottom: 2px solid var(--border-color);">Data</th>
+                <th style="padding: 12px; border-bottom: 2px solid var(--border-color);">Hora</th>
+            </tr>
+        </thead>
+        <tbody id="tabelaConsultas">
+            <tr>
+                <td colspan="4" style="padding: 12px; text-align: center; color: var(--text-muted);">
+                    Selecione um período para buscar.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
 
 </body>
 

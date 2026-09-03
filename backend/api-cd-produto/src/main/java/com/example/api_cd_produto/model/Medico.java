@@ -2,6 +2,8 @@ package com.example.api_cd_produto.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,6 +28,17 @@ public class Medico {
 
 	@Column(name = "numero_crm", nullable = false, unique = true)
 	private String numeroCrm;
+		
+	@Enumerated(EnumType.STRING)
+	private EspecealidadeMedico especealidade;
+
+	public EspecealidadeMedico getEspecealidade() {
+		return especealidade;
+	}
+
+	public void setEspecealidade(EspecealidadeMedico especealidade) {
+		this.especealidade = especealidade;
+	}
 
 	//@Lob // Define como Large Object para suportar arquivos de imagem
 	//@Column(columnDefinition = "TEXT") // Armazena a foto como String Base64

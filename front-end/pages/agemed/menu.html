@@ -137,7 +137,9 @@
         }
 
         /* Seções de Layout Comum */
-        .shortcuts-section, .form-section, .table-section {
+        .shortcuts-section,
+        .form-section,
+        .table-section {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
@@ -146,7 +148,8 @@
             margin-bottom: 24px;
         }
 
-        .shortcuts-title, .table-title {
+        .shortcuts-title,
+        .table-title {
             font-size: 18px;
             font-weight: 700;
             margin-bottom: 16px;
@@ -258,7 +261,8 @@
             border-radius: 8px;
         }
 
-        video, canvas {
+        video,
+        canvas {
             width: 100%;
             max-width: 280px;
             border-radius: 8px;
@@ -369,12 +373,41 @@
         }
 
         @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; height: auto; position: relative; border-bottom: 1px solid var(--border-color); border-right: none; }
-            .sidebar-menu { display: flex; padding: 0; overflow-x: auto; }
-            .sidebar-item a { padding: 14px 16px; white-space: nowrap; border-left: none !important; border-bottom: 3px solid transparent; }
-            .sidebar-item.active a { border-bottom-color: var(--primary-color); background: none; }
-            .main-content { margin-left: 0; width: 100%; padding: 20px; }
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-bottom: 1px solid var(--border-color);
+                border-right: none;
+            }
+
+            .sidebar-menu {
+                display: flex;
+                padding: 0;
+                overflow-x: auto;
+            }
+
+            .sidebar-item a {
+                padding: 14px 16px;
+                white-space: nowrap;
+                border-left: none !important;
+                border-bottom: 3px solid transparent;
+            }
+
+            .sidebar-item.active a {
+                border-bottom-color: var(--primary-color);
+                background: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 20px;
+            }
         }
     </style>
 </head>
@@ -391,14 +424,19 @@
                 <a onclick="navegar('home')">🏠 Início</a>
             </li>
             <li class="sidebar-item" id="menuCadastro">
-                <a onclick="navegar('cadastro')">👨‍⚕️ Cadastrar Médico</a>
+                <a href="cadastro_medicos.html">👨‍⚕️ Cadastrar Médico</a>
             </li>
             <li class="sidebar-item" id="menuCorpo">
-                <a onclick="navegar('corpo')">📋 Corpo Clínico</a>
+                <a href="listar_medicos1.html">📋 Corpo Clínico</a>
             </li>
             <li class="sidebar-item" id="menuAgenda">
-                <a onclick="navegar('agenda')">📅 Agendar Consulta</a>
+                <a href="agendamentotest.html">📅 Agendar Consulta</a>
             </li>
+            <li class="sidebar-item" id="menuAgenda">
+                <a href="pesquisa_agendamentos.html">📅 Agendamentos 🔍</a>
+            </li>
+
+
         </ul>
     </aside>
 
@@ -428,8 +466,28 @@
             <div class="shortcuts-section">
                 <h3 class="shortcuts-title">Acesso Rápido</h3>
                 <div class="shortcut-buttons">
+                    <!-- 
                     <a onclick="navegar('cadastro')" class="btn-shortcut">➕ Cadastrar Novo Médico</a>
                     <a onclick="navegar('agenda')" class="btn-shortcut">📅 Agendar Consulta</a>
+                    -->
+                    <li class="sidebar-item active" id="menuHome">
+                        <a onclick="navegar('home')">🏠 Início</a>
+                    </li>
+                    <li class="sidebar-item" id="menuCadastro">
+                        <a href="cadastro_medicos.html">👨‍⚕️ Cadastrar Médico</a>
+                    </li>
+                    <li class="sidebar-item" id="menuCorpo">
+                        <a href="listar_medicos1.html">📋 Corpo Clínico</a>
+                    </li>
+                    <li class="sidebar-item" id="menuAgenda">
+                        <a href="agendamentotest.html">📅 Agendar Consulta</a>
+                    </li>
+                    <li class="sidebar-item" id="menuAgenda">
+                        <a href="pesquisa_agendamentos.html">📅 Agendamentos 🔍</a>
+                    </li>
+
+
+
                 </div>
             </div>
         </div>
@@ -571,7 +629,7 @@
     </main>
 
     <script>
-        const API_URL = "http://localhost:8080"; 
+        const API_URL = "http://localhost:8080";
 
         // Elementos do Cadastro de Médico e Webcam
         const formMedico = document.getElementById('medicoForm');
@@ -586,7 +644,7 @@
         const imgPreview = document.getElementById('preview');
         const inputCelular = document.getElementById('celular');
 
-        let imagemBase64 = null; 
+        let imagemBase64 = null;
         let streamCamera = null;
 
         // Máscara dinâmica para o celular (Completa e Corrigida)
@@ -619,7 +677,7 @@
             btnModoUpload.classList.remove('btn-active');
             containerUpload.style.display = 'none';
             containerCamera.style.display = 'flex';
-            
+
             try {
                 streamCamera = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
                 video.srcObject = streamCamera;
@@ -657,7 +715,7 @@
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
+
                 imagemBase64 = canvas.toDataURL('image/jpeg');
                 imgPreview.src = imagemBase64;
                 imgPreview.style.display = 'block';
@@ -745,7 +803,7 @@
                     const row = document.createElement('tr');
                     // Exibe avatar padrão caso o médico não possua foto em base64 salva
                     const avatarSrc = m.foto ? m.foto : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2364748b"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5-4-8-4z"/></svg>';
-                    
+
                     row.innerHTML = `
                         <td><img src="${avatarSrc}" class="table-avatar" alt="Foto"></td>
                         <td><strong>Dr(a). ${m.nome}</strong></td>
@@ -839,7 +897,7 @@
                 if (resConsultas.ok) {
                     const consultas = await resConsultas.json();
                     document.getElementById('totalAgendamentos').textContent = consultas.length;
-                    
+
                     // Compara as strings de data no formato yyyy-MM-dd
                     const hojeStr = new Date().toISOString().split('T')[0];
                     const hojeCount = consultas.filter(c => c.data === hojeStr).length;
