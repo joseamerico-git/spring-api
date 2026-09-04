@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nossa Equipe Médica</title>
+    <link rel="stylesheet" href="./css/listar_medicos.css">
+    <style>
+        /* Estilos básicos para garantir o alinhamento da tabela e dos ícones */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        .medicos-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+        }
+        .medicos-table th, .medicos-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .medicos-table th {
+            background-color: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .col-foto {
+            width: 70px;
+            text-align: center;
+        }
+        /* Estilização do ícone/foto do médico */
+        .doctor-avatar-thumb {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            vertical-align: middle;
+            border: 2px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Corpo Clínico</h2>
+    <p class="subtitle">Conheça os profissionais disponíveis para o seu atendimento</p>
+
+    <!-- Barra de busca -->
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar médico por nome ou CRM...">
+    </div>
+
+    <!-- Mensagem de status fora da tabela para melhor controle -->
+    <div class="status-message" id="statusMessage">Carregando médicos...</div>
+
+    <!-- Tabela adicionada para listar os médicos -->
+    <div class="table-container" id="tableContainer" style="display: none;">
+        <table class="medicos-table">
+            <thead>
+                <tr>
+                    <th class="col-foto">Foto</th>
+                    <th>Nome</th>
+                    <th>CRM</th>
+                    <th>Celular</th>
+                </tr>
+            </thead>
+            <tbody id="doctorsTableBody">
+                <!-- O Javascript vai injetar as linhas aqui dentro -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+     // URL base da sua API Spring Boot
+    const BASE_URL = 'http://localhost:8080';
+    const API_URL = `${BASE_URL}/medicos`;
+
+    let todosOsMedicos = []; // Guarda a lista completa vinda da API
+
+    // Dispara a busca assim que a página terminar de carregar
+    document.addEventListener('DOMContentLoaded', fetchDoctors);
+
+    // Monitora a digitação no campo de pesquisa
+    document.getElementById('searchInput').addEventListener('input', filtrarMedicos);
+
+    async function fetchDoctors() {
+        const status = document.getElementById('statusMessage');
+        const tableContainer = document.getElementById('tableContainer');
+
+        try {
+            const response = await fetch(API_URL);
+            if (!response.ok) throw new Error('Não foi possível obter dados do servidor.');
+
+            todosOsMedicos = await response.json();
+
+            // Se o banco estiver vazio
+            if (todosOsMedicos.length === 0) {
+                status.textContent = 'Nenhum médico cadastrado no momento.';
+                return;
+            }
+
+            // Esconde o status inicial de carregamento e exibe a tabela
+            status.style.display = 'none';
+            tableContainer.style.display = 'block';
+
+            // Renderiza todos os registros inicialmente
+            renderizarTabela(todosOsMedicos);
+
+        } catch (error) {
+            console.error(error);
+            status.textContent = 'Erro ao conectar com a API. Verifique se o Spring Boot está rodando.';
+            status.style.color = '#991b1b';
+        }
+    }
+
+    // Função responsável por desenhar as linhas da tabela na tela
+    function renderizarTabela(listaDeMedicos) {
+        const tableBody = document.getElementById('doctorsTableBody');
+        const tableContainer = document.getElementById('tableContainer');
+        const status = document.getElementById('statusMessage');
+        
+        // Limpa as linhas anteriores
+        tableBody.innerHTML = '';
+
+        if (listaDeMedicos.length === 0) {
+            status.style.display = 'block';
+            tableContainer.style.display = 'none';
+            status.textContent = 'Nenhum médico encontrado com os filtros informados.';
+            return;
+        }
+
+        status.style.display = 'none';
+        tableContainer.style.display = 'block';
+
+        listaDeMedicos.forEach(doctor => {
+            const row = document.createElement('tr');
+
+            // Concatena o endereço do Spring Boot com o caminho relativo da imagem
+            const fotoSrc = doctor.foto && doctor.foto.trim() !== "" 
+                ? `${BASE_URL}${doctor.foto}` 
+                : 'https://unsplash.com'; // Avatar médico padrão funcional
+
+            // Injeta as colunas na linha correspondente
+            row.innerHTML = `
+                <td class="col-foto">
+                    <img src="${fotoSrc}" alt="Foto de ${doctor.nome}" class="doctor-avatar-thumb">
+                </td>
+                <td style="font-weight: 500; color: #1e293b;">${doctor.nome}</td>
+                <td>${doctor.numeroCrm || 'Não informado'}</td>
+                <td>📞 ${formatarCelular(doctor.celular)}</td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Função de filtro em tempo real (Frontend-side Filter)
+    function filtrarMedicos(e) {
+        const termoPesquisa = e.target.value.toLowerCase().trim();
+
+        const medicosFiltrados = todosOsMedicos.filter(doctor => {
+            const nomeMatch = doctor.nome ? doctor.nome.toLowerCase().includes(termoPesquisa) : false;
+            const crmMatch = doctor.numeroCrm ? doctor.numeroCrm.toLowerCase().includes(termoPesquisa) : false;
+            return nomeMatch || crmMatch;
+        });
+
+        renderizarTabela(medicosFiltrados);
+    }
+
+    // Função utilitária para aplicar máscara no celular
+    function formatarCelular(num) {
+        if (!num) return 'Não informado';
+        const apenasNumeros = num.replace(/\D/g, '');
+        if (apenasNumeros.length === 11) {
+            return apenasNumeros.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+        } else if (apenasNumeros.length === 10) {
+            return apenasNumeros.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+        }
+        return num;
+    }
+</script>
+
+</body>
+</html>

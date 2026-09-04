@@ -9,8 +9,9 @@ import com.example.api_cd_produto.model.Medico;
 
 public interface MedicoRepository extends JpaRepository<Medico, Long> {
 	List<Medico> findDistinctByNomeContainingIgnoreCase(String nome);
-	 // O Spring Data lê este nome e monta o SQL: SELECT * FROM medicos WHERE especealidade = ?
-    List<Medico> findByEspecealidade(EspecealidadeMedico especealidade);
-    
+
+	// O Spring Data lê este nome e monta o SQL: SELECT * FROM medicos WHERE
+	// especealidade = ?
+	List<Medico> findByEspecealidade(EspecealidadeMedico especealidade);
 
 }

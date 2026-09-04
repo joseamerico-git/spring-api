@@ -1,0 +1,102 @@
+ // URL base da sua API Spring Boot
+    const BASE_URL = 'http://localhost:8080';
+    const API_URL = `${BASE_URL}/medicos`;
+
+    let todosOsMedicos = []; // Guarda a lista completa vinda da API
+
+    // Dispara a busca assim que a página terminar de carregar
+    document.addEventListener('DOMContentLoaded', fetchDoctors);
+
+    // Monitora a digitação no campo de pesquisa
+    document.getElementById('searchInput').addEventListener('input', filtrarMedicos);
+
+    async function fetchDoctors() {
+        const status = document.getElementById('statusMessage');
+
+        try {
+            const response = await fetch(API_URL);
+            if (!response.ok) throw new Error('Não foi possível obter dados do servidor.');
+
+            todosOsMedicos = await response.json();
+
+            // Se o banco estiver vazio
+            if (todosOsMedicos.length === 0) {
+                status.textContent = 'Nenhum médico cadastrado no momento.';
+                return;
+            }
+
+            // Esconde o status inicial de carregamento
+            status.style.display = 'none';
+
+            // Renderiza todos os registros inicialmente
+            renderizarCards(todosOsMedicos);
+
+        } catch (error) {
+            console.error(error);
+            status.textContent = 'Erro ao conectar com a API. Verifique se o Spring Boot está rodando.';
+            status.style.color = '#991b1b';
+        }
+    }
+
+    // Função responsável por desenhar os cards na tela
+    function renderizarCards(listaDeMedicos) {
+        const grid = document.getElementById('doctorsGrid');
+        
+        // Limpa os cards anteriores mantendo a mensagem de status se necessária
+        const status = document.getElementById('statusMessage');
+        grid.innerHTML = '';
+        grid.appendChild(status);
+
+        if (listaDeMedicos.length === 0) {
+            status.style.display = 'block';
+            status.textContent = 'Nenhum médico encontrado com os filtros informados.';
+            return;
+        }
+
+        status.style.display = 'none';
+
+        listaDeMedicos.forEach(doctor => {
+            const card = document.createElement('div');
+            card.className = 'doctor-card';
+
+            // ATUALIZADO: Concatena o endereço do Spring Boot com o caminho relativo da imagem (/uploads/imagens/...)
+            const fotoSrc = doctor.foto && doctor.foto.trim() !== "" 
+                ? `${BASE_URL}${doctor.foto}` 
+                : 'https://unsplash.com'; // Médico padrão se não houver foto
+
+            // ATUALIZADO: Mapeamento ajustado de 'doctor.numeroCrm'
+            card.innerHTML = `
+                <img src="${fotoSrc}" alt="Foto de ${doctor.nome}" class="doctor-avatar">
+                <div class="doctor-name">${doctor.nome}</div>
+                <div class="doctor-crm">CRM: ${doctor.numeroCrm || 'Não informado'}</div>
+                <div class="doctor-phone">📞 ${formatarCelular(doctor.celular)}</div>
+            `;
+            
+            grid.appendChild(card);
+        });
+    }
+
+    // Função de filtro em tempo real (Frontend-side Filter)
+    function filtrarMedicos(e) {
+        const termoPesquisa = e.target.value.toLowerCase().trim();
+
+        const medicosFiltrados = todosOsMedicos.filter(doctor => {
+            const nomeMatch = doctor.nome ? doctor.nome.toLowerCase().includes(termoPesquisa) : false;
+            const crmMatch = doctor.numeroCrm ? doctor.numeroCrm.toLowerCase().includes(termoPesquisa) : false;
+            return nomeMatch || crmMatch;
+        });
+
+        renderizarCards(medicosFiltrados);
+    }
+
+    // Função utilitária para aplicar máscara no celular
+    function formatarCelular(num) {
+        if (!num) return 'Não informado';
+        const apenasNumeros = num.replace(/\D/g, '');
+        if (apenasNumeros.length === 11) {
+            return apenasNumeros.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+        } else if (apenasNumeros.length === 10) {
+            return apenasNumeros.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+        }
+        return num;
+    }
