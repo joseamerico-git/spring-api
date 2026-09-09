@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nossa Equipe Médica</title>
+    <link rel="stylesheet" href="./css/listar_medicos.css">
+    <style>
+        /* Estilos básicos para garantir o alinhamento da tabela e dos ícones */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        .medicos-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+        }
+        .medicos-table th, .medicos-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .medicos-table th {
+            background-color: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .col-foto {
+            width: 70px;
+            text-align: center;
+        }
+        /* Estilização do ícone/foto do médico */
+        .doctor-avatar-thumb {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            vertical-align: middle;
+            border: 2px solid #e2e8f0;
+        }
+
+        /* Efeito visual de clique na linha da tabela */
+        .medicos-table tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .medicos-table tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* --- ESTILOS DO MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 24px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .modal-header h3 {
+            margin: 0;
+            color: #1e293b;
+        }
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #64748b;
+            cursor: pointer;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #475569;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-cancel {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+        .btn-save {
+            background-color: #2563eb;
+            color: #fff;
+        }
+        .btn-save:hover {
+            background-color: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Corpo Clínico</h2>
+        <p class="subtitle">Conheça os profissionais disponíveis para o seu atendimento</p>
+
+        <!-- Barra de busca -->
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar médico por nome ou CRM...">
+        </div>
+
+        <!-- Mensagem de status fora da tabela para melhor controle -->
+        <div class="status-message" id="statusMessage">Carregando médicos...</div>
+
+        <!-- Tabela adicionada para listar os médicos -->
+        <div class="table-container" id="tableContainer" style="display: none;">
+            <table class="medicos-table">
+                <thead>
+                    <tr>
+                        <th class="col-foto">Foto</th>
+                        <th>Nome</th>
+                        <th>CRM</th>
+                        <th>Celular</th>
+                    </tr>
+                </thead>
+                <tbody id="doctorsTableBody">
+                    <!-- O Javascript vai injetar as linhas aqui dentro -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- --- ESTRUTURA DO MODAL --- -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Alterar Cadastro do Médico</h3>
+                <button class="close-button" id="closeModalBtn">&times;</button>
+            </div>
+            <form id="editForm">
+                <!-- ID Oculto para sabermos qual médico atualizar -->
+                <input type="hidden" id="editId">
+                
+                <div class="form-group">
+                    <label for="editNome">Nome Completo</label>
+                    <input type="text" id="editNome" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCrm">CRM</label>
+                    <input type="text" id="editCrm" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCelular">Celular</label>
+                    <input type="text" id="editCelular" class="form-input" required>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel" id="cancelModalBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-save">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // URL base da sua API Spring Boot
+        const BASE_URL = 'http://localhost:8080';
+        const API_URL = `${BASE_URL}/medicos`;
+        let todosOsMedicos = []; // Guarda a lista completa vinda da API
+
+        // Dispara a busca assim que a página terminar de carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchDoctors();
+            setupModalEvents();
+        });
+
+        // Monitora a digitação no campo de pesquisa
+        document.getElementById('searchInput').addEventListener('input', filtrarMedicos);
+
+        async function fetchDoctors() {
+            const status = document.getElementById('statusMessage');
+            const tableContainer = document.getElementById('tableContainer');
+
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Não foi possível obter dados do servidor.');
+                
+                todosOsMedicos = await response.json();
+
+                // Se o banco estiver vazio
+                if (todosOsMedicos.length === 0) {
+                    status.textContent = 'Nenhum médico cadastrado no momento.';
+                    return;
+                }
+
+                // Esconde o status inicial de carregamento e exibe a tabela
+                status.style.display = 'none';
+                tableContainer.style.display = 'block';
+
+                // Renderiza todos os registros inicialmente
+                renderizarTabela(todosOsMedicos);
+            } catch (error) {
+                console.error(error);
+                status.textContent = 'Erro ao conectar com a API. Verifique se o Spring Boot está rodando.';
+                status.style.color = '#991b1b';
+            }
+        }
+
+        // Função responsável por desenhar as linhas da tabela na tela
+        function renderizarTabela(listaDeMedicos) {
+            const tableBody = document.getElementById('doctorsTableBody');
+            const tableContainer = document.getElementById('tableContainer');
+            const status = document.getElementById('statusMessage');
+
+            // Limpa as linhas anteriores
+            tableBody.innerHTML = '';
+
+            if (listaDeMedicos.length === 0) {
+                status.style.display = 'block';
+                tableContainer.style.display = 'none';
+                status.textContent = 'Nenhum médico encontrado com os filtros informados.';
+                return;
+            }
+
+            status.style.display = 'none';
+            tableContainer.style.display = 'block';
+
+            listaDeMedicos.forEach(doctor => {
+                const row = document.createElement('tr');
+                
+                // Imagem do avatar corrigida usando SVG inline caso não exista foto externa
+                const fotoSrc = doctor.foto && doctor.foto.trim() !== "" 
+                    ? `${BASE_URL}${doctor.foto}` 
+Use o código com cuidado.
+: data:image/svg+xml;utf8,<svg xmlns="http://w3.org" viewBox="0 0 24 24" fill="%23cbd5e1"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5-4-8-4z"/></svg>;
+// Injeta as colunas na linha correspondente
+row.innerHTML = `
+${doctor.nome}
+${doctor.numeroCrm || 'Não informado'}
+📞 ${formatarCelular(doctor.celular)}
+`;
+// --- EVENTO DE CLIQUE NA LINHA ---
+row.addEventListener('click', () => abrirModalEdicao(doctor));
+tableBody.appendChild(row);
+});
+}
+// Função de filtro em tempo real (Frontend-side Filter)
+function filtrarMedicos(e) {
+const termoPesquisa = e.target.value.toLowerCase().trim();
+const medicosFiltrados = todosOsMedicos.filter(doctor => {
+const nomeMatch = doctor.nome ? doctor.nome.toLowerCase().includes(termoPesquisa) : false;
+const crmMatch = doctor.numeroCrm ? doctor.numeroCrm.toLowerCase().includes(termoPesquisa) : false;
+return nomeMatch || crmMatch;
+});
+renderizarTabela(medicosFiltrados);
+}
+// Função utilitária para aplicar máscara no celular
+function formatarCelular(num) {
+if (!num) return 'Não informado';
+const apenasNumeros = num.replace(/\D/g, '');
+if (apenasNumeros.length === 11) {
+return apenasNumeros.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+} else if (apenasNumeros.length === 10) {
+return apenasNumeros.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+}
+return num;
+}
+// --- LÓGICA DE CONTROLE DO MODAL ---
+function abrirModalEdicao(doctor) {
+const modal = document.getElementById('editModal');
+// Preenche os campos do formulário com os dados atuais do objeto clicado
+document.getElementById('editId').value = doctor.id || ''; // Certifique-se que o backend envia o 'id'
+document.getElementById('editNome').value = doctor.nome || '';
+document.getElementById('editCrm').value = doctor.numeroCrm || '';
+document.getElementById('editCelular').value = doctor.celular || '';
+// Abre visualmente o modal
+modal.classList.add('active');
+}
+function fecharModal() {
+document.getElementById('editModal').classList.remove('active');
+document.getElementById('editForm').reset();
+}
+function setupModalEvents() {
+// Fecha nos botões X e Cancelar
+document.getElementById('closeModalBtn').addEventListener('click', fecharModal);
+document.getElementById('cancelModalBtn').addEventListener('click', fecharModal);
+// Fecha ao clicar fora da caixa branca do modal
+document.getElementById('editModal').addEventListener('click', (e) => {
+if (e.target.id === 'editModal') fecharModal();
+});
+// Envio dos dados alterados para a API Spring Boot (Requisição PUT)
+document.getElementById('editForm').addEventListener('submit', async (e) => {
+e.preventDefault();
+const id = document.getElementById('editId').value;
+const dadosAtualizados = {
+id: id,
+nome: document.getElementById('editNome').value,
+numeroCrm: document.getElementById('editCrm').value,
+celular: document.getElementById('editCelular').value
+};
+try {
+// Substitua pela rota exata do seu PUT/UPDATE no Spring Boot (geralmente /medicos ou /medicos/{id})
+const response = await fetch(${API_URL}, {
+method: 'PUT',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify(dadosAtualizados)
+});
+if (!response.ok) throw new Error('Falha ao atualizar o cadastro do médico.');
+alert('Cadastro atualizado com sucesso!');
+fecharModal();
+fetchDoctors(); // Recarrega a tabela com os novos dados salvos no banco
+} catch (error) {
+console.error(error);
+alert('Erro ao salvar modificações. Tente novamente.');
+}
+});
+}
+

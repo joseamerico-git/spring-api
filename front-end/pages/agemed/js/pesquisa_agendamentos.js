@@ -225,8 +225,8 @@
                 return;
             }
 
-            const tbody = document.getElementById('tabelaConsultas');
-            tbody.innerHTML = '<tr><td colspan="4" style="padding: 12px; text-align: center;">Buscando...</td></tr>';
+            const tbody = document.getElementById('tabelaConsultasCorpo');
+           // tbody.innerHTML = '<tr><td colspan="4" style="padding: 12px; text-align: center;">Buscando...</td></tr>';
 
             try {
                 // Envia as datas como Query Params para o endpoint criado no Spring
@@ -235,6 +235,8 @@
                 if (!response.ok) throw new Error("Erro ao buscar dados.");
 
                 const consultas = await response.json();
+
+                /*
                 tbody.innerHTML = ""; // Limpa a mensagem de carregamento
 
                 if (consultas.length === 0) {
@@ -257,6 +259,8 @@
             `;
                     tbody.innerHTML += linha;
                 });
+                */
+               renderizarTabela(consultas);
 
             } catch (error) {
                 console.error("Erro no filtro:", error);
