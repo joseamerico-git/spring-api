@@ -6,11 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedManager - Consultar Agendamentos</title>
     <link rel="stylesheet" href="./css/pesquisa_agendamentos.css">
+    <link rel="stylesheet" href="./css/global.css">
 </head>
 
 <body>
 
     <div class="container">
+           <a href="index.html" class="btn-back">
+                🏠 Voltar para a Home
+            </a>
         <div class="header">
             <h2>Consultar Agendamentos</h2>
             <p class="subtitle">Visualize e filtre os horários marcados na clínica</p>
@@ -93,6 +97,11 @@
                 <h3>Alterar Dados da Consulta</h3>
                 <button type="button" class="btn-close" onclick="fecharModal()">&times;</button>
             </div>
+               <div class="header-actions">
+            <a href="index.html" class="btn-back">
+                🏠 Voltar para a Home
+            </a>
+        </div>
             <form id="formEditarConsulta" onsubmit="salvarAlteracoes(event)">
 
                 <!-- O JavaScript vai injetar os inputs exatamente aqui dentro -->

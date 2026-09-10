@@ -1,8 +1,8 @@
 const API_URL = 'http://localhost:8080/medicos';
 
 // Referência ao formulário e ao campo oculto de ID do HTML de edição
-const form = document.getElementById('editarMedicoForm'); 
-const inputMedicoId = document.getElementById('medicoId'); 
+const form = document.getElementById('editarMedicoForm');
+const inputMedicoId = document.getElementById('medicoId');
 
 const btnModoUpload = document.getElementById('btnModoUpload');
 const btnModoCamera = document.getElementById('btnModoCamera');
@@ -33,7 +33,7 @@ async function carregarEspecialidades() {
         if (response.ok) {
             const especialidades = await response.json();
             selectEspecialidade.innerHTML = '<option value="">Selecione uma especialidade...</option>';
-            
+
             especialidades.forEach(esp => {
                 const option = document.createElement('option');
                 option.value = esp;
@@ -61,15 +61,15 @@ async function carregarDadosMedico() {
         const response = await fetch(`${API_URL}/${id}`);
         if (response.ok) {
             const medico = await response.json();
-            
+
             // Preenche os inputs com as informações do banco de dados
             inputMedicoId.value = medico.id;
             document.getElementById('nome').value = medico.nome;
             document.getElementById('crm').value = medico.numeroCrm;
-            
+
             // Preenche o celular e força a execução da máscara de formatação
             inputCelular.value = medico.celular;
-            inputCelular.dispatchEvent(new Event('input')); 
+            inputCelular.dispatchEvent(new Event('input'));
 
             selectEspecialidade.value = medico.especialidade;
 
@@ -138,7 +138,7 @@ function fecharCamera() {
 
 // 6. Processar arquivo selecionado por Upload (Corrigido para .files[0])
 inputArquivo.addEventListener('change', (e) => {
-    const arquivo = e.target.files[0]; 
+    const arquivo = e.target.files[0];
     if (arquivo) {
         nomeArquivoOriginal = arquivo.name;
         imagemBlob = arquivo;
@@ -176,13 +176,13 @@ form.addEventListener('submit', async (e) => {
     const idMedico = inputMedicoId.value;
 
     const dadosMedico = {
-        id: idMedico, 
+        id: idMedico,
         nome: document.getElementById('nome').value,
-        numeroCrm: document.getElementById('crm').value, 
+        numeroCrm: document.getElementById('crm').value,
         celular: inputCelular.value.replace(/\D/g, ''),
         especialidade: selectEspecialidade.value
     };
-    
+
     const formData = new FormData();
 
     formData.append(
@@ -199,7 +199,7 @@ form.addEventListener('submit', async (e) => {
         // Envia uma requisição PUT para http://localhost:8080/medicos/{id}
         const response = await fetch(`${API_URL}/${idMedico}`, {
             method: 'PUT',
-            body: formData 
+            body: formData
         });
 
         if (response.ok) {

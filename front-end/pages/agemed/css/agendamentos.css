@@ -1,106 +1,108 @@
  :root {
-            --primary-color: #2563eb;
-            --primary-hover: #1d4ed8;
-            --background: #f8fafc;
-            --card-bg: #ffffff;
-            --text-color: #1e293b;
-            --border-color: #cbd5e1;
-        }
+     --primary-color: #2563eb;
+     --primary-hover: #1d4ed8;
+     --background: #f8fafc;
+     --card-bg: #ffffff;
+     --text-color: #1e293b;
+     --border-color: #cbd5e1;
+ }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+ * {
+     box-sizing: border-box;
+     margin: 0;
+     padding: 0;
+     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+ }
 
-        body {
-            background-color: var(--background);
-            color: var(--text-color);
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+ body {
+     background-color: var(--background);
+     color: var(--text-color);
+     padding: 20px;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     min-height: 100vh;
+ }
 
-        .container {
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            width: 100%;
-            max-width: 500px;
-        }
+ .container {
+     background: var(--card-bg);
+     padding: 30px;
+     border-radius: 12px;
+     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+     width: 100%;
+     max-width: 500px;
+ }
 
-        h2 {
-            margin-bottom: 24px;
-            color: var(--primary-color);
-            text-align: center;
-            font-size: 24px;
-        }
+ h2 {
+     margin-bottom: 24px;
+     color: var(--primary-color);
+     text-align: center;
+     font-size: 24px;
+ }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+ .form-group {
+     margin-bottom: 20px;
+ }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            font-size: 14px;
-        }
+ label {
+     display: block;
+     margin-bottom: 8px;
+     font-weight: 600;
+     font-size: 14px;
+ }
 
-        select, input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 16px;
-            background-color: #fff;
-            outline: none;
-            transition: border-color 0.2s;
-        }
+ select,
+ input {
+     width: 100%;
+     padding: 10px 12px;
+     border: 1px solid var(--border-color);
+     border-radius: 6px;
+     font-size: 16px;
+     background-color: #fff;
+     outline: none;
+     transition: border-color 0.2s;
+ }
 
-        select:focus, input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(37, 99, 213, 0.1);
-        }
+ select:focus,
+ input:focus {
+     border-color: var(--primary-color);
+     box-shadow: 0 0 0 3px rgba(37, 99, 213, 0.1);
+ }
 
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
+ button {
+     width: 100%;
+     padding: 12px;
+     background-color: var(--primary-color);
+     color: white;
+     border: none;
+     border-radius: 6px;
+     font-size: 16px;
+     font-weight: bold;
+     cursor: pointer;
+     transition: background-color 0.2s;
+ }
 
-        button:hover {
-            background-color: var(--primary-hover);
-        }
+ button:hover {
+     background-color: var(--primary-hover);
+ }
 
-        .message {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 14px;
-            text-align: center;
-            display: none;
-        }
+ .message {
+     margin-top: 15px;
+     padding: 10px;
+     border-radius: 6px;
+     font-size: 14px;
+     text-align: center;
+     display: none;
+ }
 
-        .success {
-            background-color: #dcfce7;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
+ .success {
+     background-color: #dcfce7;
+     color: #166534;
+     border: 1px solid #bbf7d0;
+ }
 
-        .error {
-            background-color: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
+ .error {
+     background-color: #fee2e2;
+     color: #991b1b;
+     border: 1px solid #fecaca;
+ }

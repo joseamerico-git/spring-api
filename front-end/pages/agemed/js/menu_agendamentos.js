@@ -15,7 +15,7 @@ let consultaSelecionadaId = null;
 document.addEventListener('DOMContentLoaded', async () => {
     await carregarMedicos(); // Carrega os médicos em segundo plano para uso no modal
     await buscarTodasConsultas();
-    
+
     // Configura o filtro de digitação em tempo real (Paciente ou Médico)
     inputBusca.addEventListener('input', filtrarPorTexto);
 });
@@ -74,11 +74,11 @@ async function filtrarConsultas() {
 // 5. Filtrar na barra de busca por digitação (Paciente ou Médico)
 function filtrarPorTexto() {
     const termo = inputBusca.value.toLowerCase().trim();
-    
+
     const filtradas = listaConsultasCompleta.filter(consulta => {
         const nomePaciente = consulta.nomePaciente ? consulta.nomePaciente.toLowerCase() : '';
         const nomeMedico = consulta.medico && consulta.medico.nome ? consulta.medico.nome.toLowerCase() : '';
-        
+
         return nomePaciente.includes(termo) || nomeMedico.includes(termo);
     });
 
@@ -150,7 +150,7 @@ function abrirModal(id) {
             </div>
             <div style="flex: 1;">
                 <label style="display:block; font-weight:600; margin-bottom:4px;">Horário:</label>
-                <input type="time" id="modalHora" value="${consulta.hora.substring(0,5)}" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
+                <input type="time" id="modalHora" value="${consulta.hora.substring(0, 5)}" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
             </div>
         </div>
         <div class="form-group" style="margin-bottom: 12px;">
