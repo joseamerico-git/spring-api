@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedManager - Consultar Agendamentos</title>
+    <link rel="stylesheet" href="./css/menu_agendamentos.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>Gerenciador de Agendamentos</h2>
+            <p class="subtitle">Visualize e filtre os horários marcados na clínica</p>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="inputBusca" placeholder="🔍 Digite o nome do paciente ou do médico para filtrar...">
+        </div>
+        
+        <!--*********-->
+
+         
+        <div class="shortcuts-section" style="margin-top: 24px;">
+        <h3 class="shortcuts-title">🔍 Filtrar Consultas por Período</h3>
+
+        <div style="display: flex; gap: 16px; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap;">
+            <div>
+                <label style="display:block; margin-bottom:4px; font-weight:600;">Data Inicial:</label>
+                <input type="date" id="dataInicio"
+                    style="padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:4px; font-weight:600;">Data Final:</label>
+                <input type="date" id="dataFim"
+                    style="padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+            </div>
+            <button onclick="filtrarConsultas()" class="btn-shortcut"
+                style="background: var(--primary-color); color: #fff; border: none; padding: 12px 24px;">
+                Filtrar
+            </button>
+        
+
+        <!-- Tabela para mostrar os resultados 
+        <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+            <thead>
+                <tr style="background: #f1f5f9; text-align: left;">
+                    <th style="padding: 12px; border-bottom: 2px solid var(--border-color);">Paciente</th>
+                    <th style="padding: 12px; border-bottom: 2px solid var(--border-color);">Médico</th>
+                    <th style="padding: 12px; border-bottom: 2px solid var(--border-color);">Data</th>
+                    <th style="padding: 12px; border-bottom: 2px solid var(--border-color);">Hora</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaConsultas">
+                <tr>
+                    <td colspan="4" style="padding: 12px; text-align: center; color: var(--text-muted);">
+                        Selecione um período para buscar.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        -->
+    </div>
+
+
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Paciente</th>
+                        <th>Médico Responsável</th>
+                        <th>Especialidade</th>
+                        <th>Data</th>
+                        <th>Horário</th>
+                        <th>Status</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaConsultasCorpo">
+                    <tr>
+                        <td colspan="7" class="no-data">Buscando agendamentos no sistema...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- MODAL DE ALTERAÇÃO -->
+    <div id="modalConsulta" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Alterar Dados da Consulta</h3>
+                <button type="button" class="btn-close" onclick="fecharModal()">&times;</button>
+            </div>
+            <form id="formEditarConsulta" onsubmit="salvarAlteracoes(event)">
+
+                <!-- O JavaScript vai injetar os inputs exatamente aqui dentro -->
+                <div id="modalBody"></div>
+
+                <div class="modal-actions">
+                    <button type="button" onclick="fecharModal()" class="btn-cancelar">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+   
+
+
+    </div>
+
+    
+
+    <script src="./js/menu_agendamentos.js">
+
+    </script>
+</body>
+
+</html>

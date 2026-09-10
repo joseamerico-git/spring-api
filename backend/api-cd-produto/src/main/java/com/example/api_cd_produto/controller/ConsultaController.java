@@ -1,11 +1,11 @@
 package com.example.api_cd_produto.controller;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -26,8 +26,8 @@ import com.example.api_cd_produto.repository.ConsultaRepository;
 import com.example.api_cd_produto.repository.MedicoRepository;
 
 @RestController
-@RequestMapping("/agendamentos") // Alinhado com a sua estrutura de rotas sem o prefixo /api
-@CrossOrigin(origins = "*") // Permite que o seu HTML faça requisições AJAX
+@RequestMapping("/agendamentos")
+@CrossOrigin(origins = "*")
 public class ConsultaController {
 
 	@Autowired
@@ -40,12 +40,23 @@ public class ConsultaController {
 	@PostMapping
 	public ResponseEntity<?> agendarConsulta(@RequestBody ConsultaDTO dto) {
 
+		// VALIDAÇÃO: Impede data retroativa ou horário passado no dia de hoje
+		if (dto.getData() != null) {
+			if (dto.getData().isBefore(LocalDate.now())) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body(Map.of("message", "Não é possível agendar uma consulta para uma data retroativa."));
+			}
+			
+			if (dto.getData().isEqual(LocalDate.now()) && dto.getHora() != null && dto.getHora().isBefore(LocalTime.now())) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body(Map.of("message", "Não é possível agendar uma consulta para um horário que já passou hoje."));
+			}
+		}
+
 		// 1. Verifica se o médico selecionado no HTML existe no banco de dados
 		Medico medico = medicoRepository.findById(dto.getMedicoId()).orElse(null);
 
 		if (medico == null) {
-			// Retorna erro amigável que será capturado pelo "errorData.message" do
-			// JavaScript
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 					.body(Map.of("message", "Médico selecionado não foi encontrado no sistema."));
 		}
@@ -56,7 +67,8 @@ public class ConsultaController {
 		novaConsulta.setNomePaciente(dto.getNomePaciente());
 		novaConsulta.setData(dto.getData());
 		novaConsulta.setHora(dto.getHora());
-		novaConsulta.setStatus(StatusConsulta.AGENDADO); // <- Linha adicionada
+		novaConsulta.setStatus(StatusConsulta.AGENDADO);
+		
 		// 3. Salva a nova consulta no banco de dados
 		Consulta consultaSalva = consultaRepository.save(novaConsulta);
 		return new ResponseEntity<>(consultaSalva, HttpStatus.CREATED);
@@ -69,18 +81,32 @@ public class ConsultaController {
 		return ResponseEntity.ok(consultas);
 	}
 
-	// GET: Buscar consultas em um intervalo de datas
+	// GET: Buscar consultas em um intervalo de datas (Warning do @DateTimeFormat resolvido)
 	@GetMapping("/filtro-data")
 	public ResponseEntity<List<Consulta>> listarPorPeriodo(
-			@RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
-			@RequestParam("fim") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
+			@RequestParam("inicio") LocalDate inicio,
+			@RequestParam("fim") LocalDate fim) {
 
 		List<Consulta> consultasFiltradas = consultaRepository.findByDataBetween(inicio, fim);
 		return ResponseEntity.ok(consultasFiltradas);
 	}
 
+	// PUT: Atualizar uma consulta existente
 	@PutMapping("/{id}")
 	public ResponseEntity<?> atualizarConsulta(@PathVariable Long id, @RequestBody ConsultaDTO dto) {
+
+		// VALIDAÇÃO: Impede alteração para data retroativa ou horário passado no dia de hoje
+		if (dto.getData() != null) {
+			if (dto.getData().isBefore(LocalDate.now())) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body(Map.of("message", "Não é possível alterar a consulta para uma data retroativa."));
+			}
+			
+			if (dto.getData().isEqual(LocalDate.now()) && dto.getHora() != null && dto.getHora().isBefore(LocalTime.now())) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body(Map.of("message", "Não é possível alterar a consulta para um horário que já passou hoje."));
+			}
+		}
 
 		// 1. Verifica se a consulta existe no banco de dados
 		Consulta consultaExistente = consultaRepository.findById(id).orElse(null);
@@ -102,8 +128,7 @@ public class ConsultaController {
 		consultaExistente.setData(dto.getData());
 		consultaExistente.setHora(dto.getHora());
 
-		// 4. Atualiza o status (Certifique-se de que o seu ConsultaDTO possui o
-		// atributo status)
+		// 4. Atualiza o status
 		if (dto.getStatus() != null) {
 			consultaExistente.setStatus(dto.getStatus());
 		}

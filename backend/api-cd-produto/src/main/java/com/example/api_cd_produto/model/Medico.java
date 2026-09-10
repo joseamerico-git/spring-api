@@ -35,8 +35,9 @@ public class Medico {
 	private String foto; // Armazenará o caminho relativo: "/uploads/imagens/arquivo.jpg"
 
 	/**
-	 * Retorna a URL completa da foto para que o JavaScript consiga renderizar o preview.
-	 * O `@Transient` garante que o Hibernate não tentará criar uma coluna 'url_foto' no banco de dados.
+	 * Retorna a URL completa da foto para que o JavaScript consiga renderizar o
+	 * preview. O `@Transient` garante que o Hibernate não tentará criar uma coluna
+	 * 'url_foto' no banco de dados.
 	 */
 	@Transient
 	public String getUrlFoto() {

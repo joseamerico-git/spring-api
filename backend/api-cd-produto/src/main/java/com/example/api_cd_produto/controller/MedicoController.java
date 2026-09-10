@@ -103,12 +103,10 @@ public class MedicoController {
 		List<Medico> medicos = medicoRepository.findByEspecialidade(especialidade);
 		return ResponseEntity.ok(medicos);
 	}
-	
+
 	// PUT: Atualizar médico existente salvando a foto e limpando a antiga
 	@org.springframework.web.bind.annotation.PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
-	public ResponseEntity<?> atualizarMedico(
-			@PathVariable Long id,
-			@RequestPart("medico") Medico dadosAtualizados,
+	public ResponseEntity<?> atualizarMedico(@PathVariable Long id, @RequestPart("medico") Medico dadosAtualizados,
 			@RequestPart(value = "foto", required = false) MultipartFile arquivo) {
 
 		// 1. Verifica se o médico existe no banco
@@ -136,15 +134,17 @@ public class MedicoController {
 				// --- SISTEMA DE LIMPEZA DE IMAGEM ANTIGA ---
 				// Se ele já tinha foto cadastrada, apaga do disco para não acumular lixo
 				if (medicoExistente.getFoto() != null) {
-					// Remove a primeira barra do "/uploads/..." para virar o caminho relativo correto "uploads/..."
-					String caminhoFotoAntiga = medicoExistente.getFoto().substring(1); 
+					// Remove a primeira barra do "/uploads/..." para virar o caminho relativo
+					// correto "uploads/..."
+					String caminhoFotoAntiga = medicoExistente.getFoto().substring(1);
 					Path pathFotoAntiga = Paths.get(caminhoFotoAntiga);
 					Files.deleteIfExists(pathFotoAntiga);
 				}
 				// -------------------------------------------
 
 				// Gera um novo nome único para a nova foto
-				String extensao = arquivo.getOriginalFilename().substring(arquivo.getOriginalFilename().lastIndexOf("."));
+				String extensao = arquivo.getOriginalFilename()
+						.substring(arquivo.getOriginalFilename().lastIndexOf("."));
 				String nomeArquivoUnico = UUID.randomUUID().toString() + extensao;
 
 				// Salva o novo arquivo fisicamente
@@ -165,6 +165,5 @@ public class MedicoController {
 		Medico medicoSalvo = medicoRepository.save(medicoExistente);
 		return ResponseEntity.ok(medicoSalvo);
 	}
-
 
 }
