@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.example.api_cd_produto.model.EspecealidadeMedico;
+import com.example.api_cd_produto.model.EspecialidadeMedico;
 import com.example.api_cd_produto.model.Medico;
 
 public interface MedicoRepository extends JpaRepository<Medico, Long> {
@@ -12,6 +12,6 @@ public interface MedicoRepository extends JpaRepository<Medico, Long> {
 
 	// O Spring Data lê este nome e monta o SQL: SELECT * FROM medicos WHERE
 	// especealidade = ?
-	List<Medico> findByEspecealidade(EspecealidadeMedico especealidade);
+	List<Medico> findByEspecialidade(EspecialidadeMedico especialidade);
 
 }

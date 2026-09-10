@@ -114,10 +114,16 @@
                 <table class="medicos-table">
                     <thead>
                         <tr>
-                            <th>Nome</th>
-                            <th>CRM</th>
-                            <th>Celular</th>
-                            <th>Ações</th>
+                           <thead>
+    <tr>
+        <th>Foto</th>
+        <th>Nome</th>
+        <th>CRM</th>
+        <th>Especialidade</th>
+        <th>Celular</th>
+        <th>Ações</th>
+    </tr>
+</thead>
                         </tr>
                     </thead>
                     <tbody id="doctorsTableBody">
@@ -127,6 +133,7 @@
             </div>
         </div>
 
+        
         <!-- Seção Original dos Cards -->
         <h3>Visualização em Cards</h3>
         <div class="doctors-grid" id="doctorsGrid">
@@ -162,6 +169,9 @@
             </form>
         </div>
     </div>
+
+
+    
     <script>
 const BASE_URL = 'http://localhost:8080';
 const API_URL = `${BASE_URL}/medicos`;
@@ -202,7 +212,7 @@ function renderizarTabela(listaDeMedicos) {
     if (listaDeMedicos.length === 0) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = 4;
+        cell.colSpan = 6; // Atualizado para o novo número de colunas
         cell.textContent = 'Nenhum médico correspondente encontrado.';
         cell.style.textAlign = 'center';
         cell.style.color = '#64748b';
@@ -214,30 +224,50 @@ function renderizarTabela(listaDeMedicos) {
     listaDeMedicos.forEach(doctor => {
         const row = document.createElement('tr');
 
+        // Coluna da Foto
+        const tdFoto = document.createElement('td');
+        const img = document.createElement('img');
+        // Usa uma imagem padrão de avatar caso o médico não tenha foto cadastrada
+        img.src = doctor.fotoUrl || 'https://flaticon.com';
+        img.style.width = '40px';
+        img.style.height = '40px';
+        img.style.borderRadius = '50%';
+        img.style.objectFit = 'cover';
+        tdFoto.appendChild(img);
+
         const tdNome = document.createElement('td');
         tdNome.textContent = doctor.nome || 'Não informado';
 
         const tdCrm = document.createElement('td');
         tdCrm.textContent = doctor.numeroCrm || 'Não informado';
 
+        // Coluna da Especialidade
+        const tdEspecialidade = document.createElement('td');
+        tdEspecialidade.textContent = doctor.especialidade || 'Não informado';
+
         const tdCelular = document.createElement('td');
-        tdCelular.textContent = formatarCelular(doctor.celular);
+        tdCelular.textContent = doctor.celular || 'Não informado';
 
         const tdAcoes = document.createElement('td');
         const btnEdit = document.createElement('button');
         btnEdit.className = 'btn-edit';
         btnEdit.textContent = 'Editar';
-        btnEdit.onclick = () => abrirModal(doctor);
+        btnEdit.onclick = () => abrirModal(doctor.id);
+        
         tdAcoes.appendChild(btnEdit);
-
+        
+        // Coloca os elementos na ordem correta da tabela
+        row.appendChild(tdFoto);
         row.appendChild(tdNome);
         row.appendChild(tdCrm);
+        row.appendChild(tdEspecialidade);
         row.appendChild(tdCelular);
         row.appendChild(tdAcoes);
-
+        
         tbody.appendChild(row);
     });
 }
+
 
 function renderizarCards(listaDeMedicos) {
     const grid = document.getElementById('doctorsGrid');
@@ -301,32 +331,45 @@ function filtrarMedicos(e) {
     renderizarTabela(medicosFiltrados);
 }
 
-function abrirModal(doctor) {
-    document.getElementById('editId').value = doctor.id || '';
-    document.getElementById('editNome').value = doctor.nome || '';
-    document.getElementById('editCrm').value = doctor.numeroCrm || '';
-    document.getElementById('editCelular').value = doctor.celular || '';
-    document.getElementById('editModal').classList.add('active');
+function abrirModal(idMedico) {
+    const medico = todosOsMedicos.find(d => d.id === idMedico);
+    
+    if (medico) {
+        document.getElementById('editId').value = medico.id;
+        document.getElementById('editNome').value = medico.nome || '';
+        document.getElementById('editCrm').value = medico.numeroCrm || '';
+        document.getElementById('editEspecialidade').value = medico.especialidade || '';
+        document.getElementById('editCelular').value = medico.celular || '';
+        document.getElementById('editFotoUrl').value = medico.fotoUrl || '';
+        
+        // Exibe e atualiza o preview da miniatura no modal
+        const preview = document.getElementById('editFotoPreview');
+        preview.src = medico.fotoUrl || 'https://flaticon.com';
+        preview.style.display = 'inline-block';
+        
+        document.getElementById('editModal').classList.add('active');
+    }
 }
 
 function fecharModal() {
     document.getElementById('editModal').classList.remove('active');
     document.getElementById('editForm').reset();
 }
+async function salvarAlteracoesMedico(event) {
+    event.preventDefault();
 
-async function salvarAlteracoesMedico(e) {
-    e.preventDefault();
     const id = document.getElementById('editId').value;
     const dadosAtualizados = {
         id: id,
         nome: document.getElementById('editNome').value,
         numeroCrm: document.getElementById('editCrm').value,
-        celular: document.getElementById('editCelular').value
+        especialidade: document.getElementById('editEspecialidade').value,
+        celular: document.getElementById('editCelular').value,
+        fotoUrl: document.getElementById('editFotoUrl').value
     };
 
     try {
-        // CORREÇÃO: Adicionado template literal correto na URL do fetch
-        const response = await fetch(`${API_URL}`, {
+        const response = await fetch(`${API_URL}/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -334,17 +377,16 @@ async function salvarAlteracoesMedico(e) {
             body: JSON.stringify(dadosAtualizados)
         });
 
-        if (!response.ok) throw new Error('Falha ao atualizar os dados do médico no servidor.');
+        if (!response.ok) throw new Error('Falha ao atualizar os dados do médico.');
 
-        alert('Dados updated com sucesso!');
+        alert('Médico atualizado com sucesso!');
         fecharModal();
-        fetchDoctors();
+        fetchDoctors(); 
     } catch (error) {
         console.error(error);
-        alert('Erro ao salvar alterações: ' + error.message);
+        alert('Erro ao salvar alterações. Verifique os campos e tente novamente.');
     }
 }
-
 function formatarCelular(num) {
     if (!num) return 'Não informado';
     const apenasNumeros = String(num).replace(/\D/g, '');

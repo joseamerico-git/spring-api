@@ -11,7 +11,7 @@
         const btnCapturar = document.getElementById('btnCapturar');
         const imgPreview = document.getElementById('preview');
         const inputCelular = document.getElementById('celular');
-        const selectEspecialidade = document.getElementById('especealidade');
+        const selectEspecialidade = document.getElementById('especialidade');
 
         let imagemBlob = null;
         let streamCamera = null;

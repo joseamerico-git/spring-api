@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Data;
 
 @Entity
@@ -29,21 +30,25 @@ public class Medico {
 	private String numeroCrm;
 
 	@Enumerated(EnumType.STRING)
-	private EspecealidadeMedico especealidade;
+	private EspecialidadeMedico especialidade;
 
-	public EspecealidadeMedico getEspecealidade() {
-		return especealidade;
-	}
-
-	public void setEspecealidade(EspecealidadeMedico especealidade) {
-		this.especealidade = especealidade;
-	}
-
-	// @Lob // Define como Large Object para suportar arquivos de imagem
-	// @Column(columnDefinition = "TEXT") // Armazena a foto como String Base64
-	// private String fotoBase64;
-	// Dentro da classe Medico
 	private String foto; // Armazenará o caminho relativo: "/uploads/imagens/arquivo.jpg"
+
+	/**
+	 * Retorna a URL completa da foto para que o JavaScript consiga renderizar o preview.
+	 * O `@Transient` garante que o Hibernate não tentará criar uma coluna 'url_foto' no banco de dados.
+	 */
+	@Transient
+	public String getUrlFoto() {
+		if (this.foto == null) {
+			return null;
+		}
+		return "http://localhost:8080" + this.foto;
+	}
+
+	// =========================================================================
+	// GETTERS E SETTERS MANUAIS
+	// =========================================================================
 
 	public Long getId() {
 		return id;
@@ -77,6 +82,14 @@ public class Medico {
 		this.numeroCrm = numeroCrm;
 	}
 
+	public EspecialidadeMedico getEspecialidade() {
+		return especialidade;
+	}
+
+	public void setEspecialidade(EspecialidadeMedico especialidade) {
+		this.especialidade = especialidade;
+	}
+
 	public String getFoto() {
 		return foto;
 	}
@@ -84,5 +97,4 @@ public class Medico {
 	public void setFoto(String foto) {
 		this.foto = foto;
 	}
-
 }

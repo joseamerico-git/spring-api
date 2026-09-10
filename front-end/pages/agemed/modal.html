@@ -1,20 +1,18 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!-- Botão para testar a abertura do modal (opcional) -->
+<button id="btnAbrirModal" class="btn">Editar Médico (Teste)</button>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Médico</title>
-   <link rel="stylesheet" href="./css/cadastro_medicos.css">
-</head>
+<!-- Estrutura do Modal (Inicia escondido) -->
+<div id="modalEditarMedico" class="modal-overlay">
+    <div class="modal-container">
+        <!-- Botão de Fechar (X) -->
+        <button type="button" class="modal-close" id="btnFecharModal">&times;</button>
+        
+        <h2>Editar Profissional</h2>
+        <p class="subtitle">Atualize as informações do médico no sistema</p>
+        
+        <form id="editarMedicoForm">
+            <input type="hidden" id="medicoId" name="id">
 
-<body>
-
-    <div class="container">
-        <h2>Novo Profissional</h2>
-        <p class="subtitle">Insira as informações do médico no sistema</p>
-
-        <form id="medicoForm">
             <div class="form-group">
                 <label for="nome">Nome do Médico:</label>
                 <input type="text" id="nome" required placeholder="Ex: Dr. Carlos Silva">
@@ -30,10 +28,9 @@
                 <input type="text" id="celular" required placeholder="Ex: (11) 99999-9999" maxlength="15">
             </div>
 
-            <!-- NOVO: Campo de especialidade vindo do enum do backend -->
             <div class="form-group">
-                <label for="especialidade">Especialidade:</label>
-                <select id="especialidade" required>
+                <label for="especealidade">Especialidade:</label>
+                <select id="especealidade" required>
                     <option value="">Selecione uma especialidade...</option>
                 </select>
             </div>
@@ -41,33 +38,27 @@
             <div class="form-group">
                 <label>Foto do Médico:</label>
                 <div class="btn-group">
-                    <button type="button" class="btn" id="btnModoUpload">Enviar Arquivo</button>
+                    <button type="button" class="btn" id="btnModoUpload">Alterar Arquivo</button>
                     <button type="button" class="btn" id="btnModoCamera">Usar Webcam</button>
                 </div>
 
-                <!-- Opção 1: Arquivo -->
                 <div id="containerUpload" style="display: none;">
                     <input type="file" id="inputArquivo" accept="image/*">
                 </div>
 
-                <!-- Opção 2: Câmera -->
-                <div class="camera-container" id="containerCamera">
+                <div class="camera-container" id="containerCamera" style="display: none;">
                     <video id="video" autoplay playsinline></video>
                     <button type="button" class="btn btn-capture" id="btnCapturar">Tirar Foto</button>
                     <canvas id="canvas" style="display:none;"></canvas>
                 </div>
             </div>
 
-            <!-- Área de Preview Estilizada -->
             <div class="preview-container">
                 <label>Visualização do Perfil</label>
-                <img id="preview" class="doctor-avatar-preview" alt="Preview da imagem">
+                <img id="preview" class="doctor-avatar-preview" alt="Preview da imagem" src="./img/default-avatar.png">
             </div>
 
-            <button type="submit" class="btn-submit">Salvar Médico</button>
+            <button type="submit" class="btn-submit">Salvar Alterações</button>
         </form>
     </div>
-
-    <script src="./js/cadastro_medicos.js">
-       
-    </script>
+</div>
