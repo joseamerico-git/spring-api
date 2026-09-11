@@ -27,7 +27,7 @@ import com.example.api_cd_produto.repository.MedicoRepository;
 
 @RestController
 @RequestMapping("/agendamentos")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://127.0.0.1:5500")
 public class ConsultaController {
 
 	@Autowired

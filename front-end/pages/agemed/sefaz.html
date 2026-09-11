@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerador XML - Transferência de Veículos</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 30px; background-color: #f5f7fa; color: #333; }
+        h1, h2 { color: #2c3e50; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .form-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        label { font-size: 13px; font-weight: bold; margin-bottom: 5px; display: block; color: #555; }
+        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #2980b9; }
+        .btn-success { background-color: #2ecc71; }
+        .btn-success:hover { background-color: #27ae60; }
+        fieldset { border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 15px; background: #fafafa; }
+        legend { font-weight: bold; color: #2c3e50; padding: 0 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
+        th { background-color: #eaeded; }
+        textarea { width: 100%; height: 200px; margin-top: 15px; font-family: monospace; background: #282c34; color: #abb2bf; padding: 15px; border-radius: 4px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Gerador de XML de Veículos</h1>
+    
+    <fieldset>
+        <legend>Dados do Veículo</legend>
+        <div class="form-group">
+            <div><label>Renavam</label><input type="text" id="renavam" value="123"></div>
+            <div><label>Placa</label><input type="text" id="placa" value="BTD-9012"></div>
+            <div><label>Nº Espelho</label><input type="text" id="nroEspelho" value="123"></div>
+            <div><label>Data Venda</label><input type="date" id="dataVenda" value="2021-01-30"></div>
+            <div><label>CNPJ Cartório</label><input type="text" id="cnpjCartorio" value="X"></div>
+            <div><label>CPF Responsável</label><input type="text" id="cpfResponsavel" value="X"></div>
+        </div>
+        <div class="form-group">
+            <div><label>Nome Arq P7S</label><input type="text" id="nomeArquivoP7S" value="D"></div>
+            <div><label>Conteúdo Arq P7S</label><input type="text" id="conteudoArquivoP7S" value="null"></div>
+            <div><label>Caminho Arq P7S</label><input type="text" id="caminhoArquivoP7S" value="null"></div>
+            <div><label>Tamanho Arq P7S</label><input type="text" id="tamanhoArquivoP7S" value="0.0"></div>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Dados do Comprador</legend>
+        <div class="form-group">
+            <div><label>Tipo Documento</label><input type="text" id="tipoDocumento" value="null"></div>
+            <div><label>Documento</label><input type="text" id="documento" value="null"></div>
+            <div><label>Descrição Doc</label><input type="text" id="descricaoDocumento" value="null"></div>
+            <div><label>Endereço</label><input type="text" id="endereco" value="null"></div>
+        </div>
+        <div class="form-group">
+            <div><label>Número</label><input type="number" id="numero" value="0"></div>
+            <div><label>Complemento</label><input type="text" id="complemento" value="null"></div>
+            <div><label>Bairro</label><input type="text" id="bairro" value="D"></div>
+            <div><label>CEP</label><input type="text" id="cep" value="null"></div>
+            <div><label>UF</label><input type="text" id="uf" value="null"></div>
+            <div><label>Município</label><input type="text" id="municipio" value="assis"></div>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Rec. Firma Vendedor</legend>
+        <div class="form-group">
+            <div><label>Livro</label><input type="text" id="livroVendedor" value=""></div>
+            <div><label>Folha</label><input type="text" id="folhaVendedor" value=""></div>
+            <div><label>Data Rec. Firma</label><input type="text" id="dataFirmaVendedor" value="null"></div>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Rec. Firma Comprador</legend>
+        <div class="form-group">
+            <div><label>Livro</label><input type="text" id="livroComprador" value=""></div>
+            <div><label>Folha</label><input type="text" id="folhaComprador" value=""></div>
+            <div><label>Data Rec. Firma</label><input type="text" id="dataFirmaComprador" value="31/01/2021"></div>
+        </div>
+    </fieldset>
+
+    <button type="button" id="addVeiculoBtn">Adicionar à Lista</button>
+    <button type="button" id="generateXmlBtn" class="btn-success">Gerar e Baixar XML</button>
+
+    <h2>Veículos na Lista</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Placa</th>
+                <th>Renavam</th>
+                <th>Data Venda</th>
+                <th>Município</th>
+            </tr>
+        </thead>
+        <tbody id="veiculosTableBody">
+            <!-- Os veículos adicionados aparecerão aqui -->
+        </tbody>
+    </table>
+
+    <h2>Preview do XML Gerado</h2>
+    <textarea id="xmlOutput" readonly placeholder="O XML aparecerá aqui após clicar em Gerar..."></textarea>
+</div>
+
+<script>
+    // Array na memória que guardará a lista de veículos adicionados
+    const listaVeiculos = [];
+
+    // Captura os elementos do DOM
+    document.getElementById('addVeiculoBtn').addEventListener('click', () => {
+        const veiculo = {
+            renavam: document.getElementById('renavam').value,
+            placa: document.getElementById('placa').value,
+            nroEspelho: document.getElementById('nroEspelho').value,
+            dataVenda: document.getElementById('dataVenda').value,
+            cnpjCartorio: document.getElementById('cnpjCartorio').value,
+            cpfResponsavel: document.getElementById('cpfResponsavel').value,
+            nomeArquivoP7S: document.getElementById('nomeArquivoP7S').value,
+            conteudoArquivoP7S: document.getElementById('conteudoArquivoP7S').value,
+            caminhoArquivoP7S: document.getElementById('caminhoArquivoP7S').value,
+            tamanhoArquivoP7S: document.getElementById('tamanhoArquivoP7S').value,
+            dadosComprador: {
+                tipoDocumento: document.getElementById('tipoDocumento').value,
+                documento: document.getElementById('documento').value,
+                descricaoDocumento: document.getElementById('descricaoDocumento').value,
+                endereco: document.getElementById('endereco').value,
+                numero: document.getElementById('numero').value,
+                complemento: document.getElementById('complemento').value,
+                bairro: document.getElementById('bairro').value,
+                cep: document.getElementById('cep').value,
+                uf: document.getElementById('uf').value,
+                municipio: document.getElementById('municipio').value,
+            },
+            dadosReconhecimentoFirmaVendedor: {
+                livro: document.getElementById('livroVendedor').value,
+                folha: document.getElementById('folhaVendedor').value,
+                dataReconhecimentoFirma: document.getElementById('dataFirmaVendedor').value,
+            },
+            dadosReconhecimentoFirmaComprador: {
+                livro: document.getElementById('livroComprador').value,
+                folha: document.getElementById('folhaComprador').value,
+                dataReconhecimentoFirma: document.getElementById('dataFirmaComprador').value,
+            }
+        };
+
+        listaVeiculos.push(veiculo);
+        atualizarTabela();
+    });
+
+    function atualizarTabela() {
+        const tbody = document.getElementById('veiculosTableBody');
+        tbody.innerHTML = '';
+        
+        listaVeiculos.forEach(v => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${v.placa}</td><td>${v.renavam}</td><td>${v.dataVenda}</td><td>${v.dadosComprador.municipio}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    document.getElementById('generateXmlBtn').addEventListener('click', () => {
+        if(listaVeiculos.length === 0) {
+            alert('Adicione pelo menos um veículo na lista antes de gerar o XML!');
+            return;
+        }
+
+        let xmlString = '<?xml version="1.0"?>\n';
+        xmlString += '<veiculos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \n';
+        xmlString += 'xsi:noNamespaceSchemaLocation="http://www.fazenda.sp.gov.br/cartorios/ValidacaoTransferencia.xsd">\n';
+
+        listaVeiculos.forEach(v => {
+            xmlString += '  <veiculo>\n';
+            xmlString += `    <renavam>${v.renavam}</renavam>\n`;
+            xmlString += `    <placa>${v.placa}</placa>\n`;
+            xmlString += `    <nroEspelho>${v.nroEspelho}</nroEspelho>\n`;
+            xmlString += `    <dataVenda>${v.dataVenda}</dataVenda>\n`;
+            xmlString += `    <cnpjCartorio>${v.cnpjCartorio}</cnpjCartorio>\n`;
+            xmlString += `    <cpfResponsavel>${v.cpfResponsavel}</cpfResponsavel>\n`;
+            xmlString += `    <nomeArquivoP7S>${v.nomeArquivoP7S}</nomeArquivoP7S>\n`;
+            xmlString += `    <conteudoArquivoP7S>${v.conteudoArquivoP7S}</conteudoArquivoP7S>\n`;
+            xmlString += `    <caminhoArquivoP7S>${v.caminhoArquivoP7S}</caminhoArquivoP7S>\n`;
+            xmlString += `    <tamanhoArquivoP7S>${v.tamanhoArquivoP7S}</tamanhoArquivoP7S>\n`;
+            xmlString += '    <dadosComprador>\n';
+
+xmlString += <tipoDocumento>${v.dadosComprador.tipoDocumento}</tipoDocumento>\n;
+xmlString += <documento>${v.dadosComprador.documento}</documento>\n;
+xmlString += <descricaoDocumento>${v.dadosComprador.descricaoDocumento}</descricaoDocumento>\n;
+xmlString += <endereco>${v.dadosComprador.endereco}</endereco>\n;
+xmlString += <numero>${v.dadosComprador.numero}</numero>\n;
+xmlString += <complemento>${v.dadosComprador.complemento}</complemento>\n;
+xmlString += <bairro>${v.dadosComprador.bairro}</bairro>\n;
+xmlString += <cep>${v.dadosComprador.cep}</cep>\n;
+xmlString += <uf>${v.dadosComprador.uf}</uf>\n;
+xmlString += <municipio>${v.dadosComprador.municipio}</municipio>\n;
+xmlString += ' \n';
+xmlString += ' \n';
+xmlString += <livro>${v.dadosReconhecimentoFirmaVendedor.livro}</livro>\n;
+xmlString += <folha>${v.dadosReconhecimentoFirmaVendedor.folha}</folha>\n;
+xmlString += <dataReconhecimentoFirma>${v.dadosReconhecimentoFirmaVendedor.dataReconhecimentoFirma}</dataReconhecimentoFirma>\n;
+xmlString += ' \n';
+xmlString += ' \n';
+xmlString += <livro>${v.dadosReconhecimentoFirmaComprador.livro}</livro>\n;
+xmlString += <folha>${v.dadosReconhecimentoFirmaComprador.folha}</folha>\n;
+xmlString += <dataReconhecimentoFirma>${v.dadosReconhecimentoFirmaComprador.dataReconhecimentoFirma}</dataReconhecimentoFirma>\n;
+xmlString += ' \n';
+xmlString += ' \n';
+});
+xmlString += '';
+// Mostra o resultado na caixa de texto
+document.getElementById('xmlOutput').value = xmlString;
+// Script para baixar o arquivo gerado
+const blob = new Blob([xmlString], { type: 'application/xml' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'ValidacaoTransferencia.xml';
+a.click();
+URL.revokeObjectURL(url);
+});

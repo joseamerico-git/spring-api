@@ -54,6 +54,27 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<!-- JABX XMLLLL
+		-->
+
+<dependencies>
+    <!-- API do JAXB para mapeamento das tags XML -->
+    <dependency>
+        <groupId>jakarta.xml.bind</groupId>
+        <artifactId>jakarta.xml.bind-api</artifactId>
+        <version>4.0.2</version>
+    </dependency>
+
+    <!-- Implementação do JAXB (mecanismo que faz a conversão real) -->
+    <dependency>
+        <groupId>org.glassfish.jaxb</groupId>
+        <artifactId>jaxb-runtime</artifactId>
+        <version>4.0.5</version>
+        <scope>runtime</scope>
+    </dependency>
+</dependencies>		
+		
 	</dependencies>
 	<build>
 		<plugins>
