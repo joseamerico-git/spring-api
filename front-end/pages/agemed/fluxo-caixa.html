@@ -259,7 +259,13 @@
                 <div class="search-box">
                     <input type="text" id="input-busca" class="form-control"
                         placeholder="🔍 Digite a descrição ou o tipo para filtrar...">
+
+                    <input type="date" id="data-inicio">
+                    <input type="date" id="data-fim">
+                    <button id="btn-limpar-filtros">Limpar Filtros</button>
                 </div>
+
+
 
                 <div class="table-wrapper">
                     <table>
@@ -291,7 +297,10 @@
 
     // Inicialização de ouvintes após o carregamento da página
     document.addEventListener('DOMContentLoaded', carregarLancamentos);
-    document.getElementById('input-busca').addEventListener('input', filtrarLocalmente);
+    document.getElementById('input-busca').addEventListener('input', aplicarFiltros);
+    document.getElementById('data-inicio').addEventListener('change', aplicarFiltros);
+    document.getElementById('data-fim').addEventListener('change', aplicarFiltros);
+    document.getElementById('btn-limpar-filtros').addEventListener('click', limparFiltros);
 
     // Envio do formulário (POST)
     document.getElementById('form-lancamento').addEventListener('submit', async (e) => {
@@ -330,7 +339,7 @@
             if (!response.ok) throw new Error('Erro ao buscar lançamentos');
 
             todosOsLancamentos = await response.json();
-            document.getElementById('input-busca').value = ''; // Reseta input
+            limparCamposFiltro(); // Reseta os campos visualmente
 
             renderizarTabela(todosOsLancamentos);
             atualizarDashboard(todosOsLancamentos); 
@@ -341,24 +350,49 @@
         }
     }
 
-    // Processamento dinâmico da caixa de busca
-    function filtrarLocalmente(e) {
-        const termo = e.target.value.toLowerCase().trim();
+    // Processamento dinâmico combinado: Busca por texto + Intervalo de datas
+    function aplicarFiltros() {
+        const termo = document.getElementById('input-busca').value.toLowerCase().trim();
+        const dataInicioStr = document.getElementById('data-inicio').value;
+        const dataFimStr = document.getElementById('data-fim').value;
 
-        if (!termo) {
-            renderizarTabela(todosOsLancamentos);
-            atualizarDashboard(todosOsLancamentos);
-            return;
-        }
+        // Converte as datas de busca para objetos Date se estiverem preenchidas
+        // Configura inicio para o primeiro milissegundo do dia e fim para o último milissegundo do dia
+        const dataInicio = dataInicioStr ? new Date(dataInicioStr + 'T00:00:00') : null;
+        const dataFim = dataFimStr ? new Date(dataFimStr + 'T23:59:59.999') : null;
 
         const listaFiltrada = todosOsLancamentos.filter(l => {
+            // 1. Filtro de Texto (Descrição ou Tipo)
             const descricaoMatch = l.descricao ? l.descricao.toLowerCase().includes(termo) : false;
             const tipoMatch = l.tipo ? l.tipo.toLowerCase().includes(termo) : false;
-            return descricaoMatch || tipoMatch;
+            const textoValido = !termo || (descricaoMatch || tipoMatch);
+
+            // 2. Filtro de Datas
+            const dataLancamento = new Date(l.dataHora);
+            let dataValida = true;
+
+            if (dataInicio && dataLancamento < dataInicio) dataValida = false;
+            if (dataFim && dataLancamento > dataFim) dataValida = false;
+
+            // Retorna o item apenas se passar em ambos os critérios simultaneamente
+            return textoValido && dataValida;
         });
 
         renderizarTabela(listaFiltrada);
         atualizarDashboard(listaFiltrada);
+    }
+
+    // Reseta os inputs e recarrega os dados originais
+    function limparFiltros() {
+        limparCamposFiltro();
+        renderizarTabela(todosOsLancamentos);
+        atualizarDashboard(todosOsLancamentos);
+    }
+
+    function limparCamposFiltro() {
+        document.getElementById('input-busca').value = '';
+        document.getElementById('data-inicio').value = '';
+        document.getElementById('data-fim').value = '';
     }
 
     // Montagem estrutural das linhas da tabela
@@ -376,7 +410,6 @@
             const classeBadge = l.tipo === 'ENTRADA' ? 'badge-entrada' : 'badge-saida';
             const sinal = l.tipo === 'ENTRADA' ? '+' : '-';
 
-            // Correção da estrutura HTML e concatenação das variáveis
             const linha = `
                 <tr>
                     <td>${dataFormatada}</td>
@@ -389,7 +422,7 @@
         });
     }
 
-    //  Atualização reativa dos blocos de saldo superiores
+    // Atualização reativa dos blocos de saldo superiores
     function atualizarDashboard(lancamentos) {
         let entradas = 0;
         let saidas = 0;
@@ -414,3 +447,5 @@
         return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 </script>
+</body>
+</html>
