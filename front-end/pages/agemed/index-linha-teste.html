@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="utf-8">
+    <title>Estudo Canvas - Calibração</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Fonte moderna do Google -->
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <header class="app-header">
+        <h1>Estudo de Medição via Canvas</h1>
+        <div class="file-upload">
+            <label for="inp" class="custom-file-upload">
+                Escolher Imagem
+            </label>
+            <input type="file" id="inp">
+        </div>
+    </header>
+
+    <main class="app-container">
+        
+        <!-- Área da Imagem / Canvas -->
+        <section class="canvas-area">
+            <div id="image" class="canvas-wrapper">
+                <canvas id="canvas"></canvas>
+            </div>
+        </section>
+
+        <!-- Painel Lateral de Dados -->
+        <aside class="sidebar-panel" id="pontos">
+            <h2>Valores Capturados</h2>
+            
+            <form id="cdPt" action="./cadastros/cdPts.php" method="post">
+                
+                <!-- Grupo Calibração -->
+                <fieldset class="form-group">
+                    <legend>Calibração</legend>
+                    
+                    <div class="input-block">
+                        <label for="centimetros">Valor em centímetros</label>
+                        <input id="centimetros" type="number" value="4">
+                    </div>
+                    
+                    <div class="input-block">
+                        <label for="milimetros">Milímetros na régua</label>
+                        <input id="milimetros" type="text">
+                    </div>
+                    
+                    <div class="input-block">
+                        <label for="vlcalibracao">Valor calibragem em pixel</label>
+                        <input id="vlcalibracao" type="text">
+                    </div>
+                </fieldset>
+                
+                <!-- Grupo Ponto Inicial -->
+                <fieldset class="form-group">
+                    <legend>Ponto Inicial</legend>
+                    
+                    <div class="input-block">
+                        <label for="descricao">Descrição do ponto inicial</label>
+                        <input id="descricao" type="text">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-block">
+                            <label for="pointa">Eixo X</label>
+                            <input id="pointa" type="text">
+                        </div>
+                        <div class="input-block">
+                            <label for="origemy">Eixo Y</label>
+                            <input id="origemy" type="text">
+                        </div>
+                    </div>
+                </fieldset>
+                
+                <!-- Grupo Ponto Final -->
+                <fieldset class="form-group">
+                    <legend>Ponto Final</legend>
+                    
+                    <div class="input-block">
+                        <label for="descricaob">Descrição do ponto final</label>
+                        <input id="descricaob" type="text">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-block">
+                            <label for="pointb">Eixo X</label>
+                            <input id="pointb" type="text">
+                        </div>
+                        <div class="input-block">
+                            <label for="destinoy">Eixo Y</label>
+                            <input id="destinoy" type="text">
+                        </div>
+                    </div>
+                </fieldset>
+                
+                <!-- Grupo Distâncias -->
+                <fieldset class="form-group highlight-group">
+                    <legend>Distâncias</legend>
+                    
+                    <div class="input-block">
+                        <label for="distpixel">Distância em pixel</label>
+                        <input id="distpixel" type="text" readonly>
+                    </div>
+
+                    <div class="input-block">
+                        <label for="distcalib">Distância calibrada</label>
+                        <input id="distcalib" type="text" readonly>
+                    </div>
+                </fieldset>
+
+                <button type="submit" class="btn-submit">Enviar Dados</button>
+            </form>
+        </aside>
+    </main>
+
+    <!-- O seu script original mantido intacto -->
+    <script>
+        let canvasElem = document.querySelector("canvas");
+        var canvas = document.getElementById('canvas');
+        var pincel = canvas.getContext('2d');
+        var altura;
+        var largura;
+        let descponto;
+        let calibracao;
+        let centimeros;
+        var vlc;
+
+        var arr = [];
+        let x, y;
+        
+        let xf;
+        let yf;
+        let distancia;
+        var img = new Image();
+        img.src = "noimage.jpg";
+
+        document.getElementById('inp').onchange = function (e) {
+                var img = new Image();
+                img.onload = draw;
+                img.onerror = failed;
+                img.src = URL.createObjectURL(this.files[0]);
+        };
+
+        function draw() {
+                var canvas = document.getElementById('canvas');
+                canvas.width = this.width;
+                canvas.height = this.height;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(this, 0, 0);
+        }
+        function failed() {
+                console.error("The provided file couldn't be loaded as an Image media");
+        }
+
+        img.onload = function () {
+                var canvas = document.getElementById('canvas');
+                canvas.width = this.width;
+                canvas.height = this.height;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(this, 0, 0);
+        }
+
+        function getMousePosition(canvas, event) {
+                let rect = canvas.getBoundingClientRect();
+                let x = event.clientX - rect.left;
+                let y = event.clientY - rect.top;
+                console.log("Coordenada x: " + x, "Coordenada y: " + y);
+                alert("x : " + x + "\n" + "y : " + y);
+
+                var z = 0;
+                var x1 = x;
+
+                obj = { descricao: descponto, posx: x, posy: y,distancia: distancia, vlc: vlc,calibracao: calibracao, centimetros: centimeros }
+                arr.push(obj);
+
+                if (arr.length == 1) { descponto = "p_" + arr.length; }
+                if (arr.length == 2) { descponto = "p_" + arr.length; }
+                if (arr.length > 2) { descponto = prompt("Por favor digite o nome do ponto", "Ponto nasio"); }
+
+                if (descponto != null) { console.log(descponto); }
+
+                var div = document.getElementById('image');
+                var ponto = document.createElement("span");
+                ponto.className = "ponto";
+
+                ponto.style.cssText = "top: " + (parseInt(y) - 2.5) + "px; left: " + (parseInt(x) - 2.5) + "px;";
+                ponto.style.backgroundColor = "yellow";
+
+                ponto.textContent = descponto + " ";
+                ponto.textContent = ponto.textContent + "x:" + round(x, 2);
+                ponto.textContent = ponto.textContent + "y:" + round(y, 2);
+                div.appendChild(ponto);
+        }
+
+        function calcular() {
+                var x1 = 100; var x2 = 200; var y1 = 100; var y2 = 200;
+                distancia = Math.sqrt(Math.pow(1 - 3, 2) + Math.pow(1 - 3, 2)); 
+                console.log('Distância: ${distancia}');
+                console.log("distância ** entre os pontos: x1(" + x1 + ") e x2 (" + x2 + ") é de (" + distancia + ")");
+        }
+
+        const round = (num, places) => {
+                if (!("" + num).includes("e")) {
+                        return +(Math.round(num + "e+" + places) + "e-" + places);
+                } else {
+                        let arr = ("" + num).split("e");
+                        let sig = ""
+                        if (+arr[1] + places > 0) { sig = "+"; }
+                        return +(Math.round(+arr[0] + "e" + sig + (+arr[1] + places)) + "e-" + places);
+                }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+*{margin:0px; padding:0px;}
+
+
+body{
+
+background-color:azure;
+
+
+}
+
+canvas {
+        /* Background pattern from Toptal Subtle Patterns */
+       
+     border:1px solid orange;
+    
+        
+     }
+
+.div-container{
+        dispay:block;
+        width:50%;
+        height:100%;
+        border:1px solid red;
+        position: relative;
+        display: inline-block;
+        background-color:azure;
+
+}
+
+.ponto{
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #FFFF00;
+        position: absolute;
+     }
+
+
+     .texto{
+        width: 5px;
+        height:5px;
+        border-radius: 50%;
+        background-color: #66ff00;
+        position: absolute;
+     }
+     
+     .pontos{
+             border:1px solid orange;
+             display:flex;
+             width:50%;
+             float:left;
+             display: inline-block;
+             position:relative;
+             
+             
+     
+     }
+     #image{
+             color:yellow;
+     }

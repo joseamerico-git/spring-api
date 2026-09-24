@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="utf-8">
+    <title>Estudo Canvas - Calibração</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <header class="app-header">
+        <h1>Estudo de Medição via Canvas</h1>
+        <div class="file-upload">
+            <label for="inp" class="custom-file-upload">
+                Escolher Imagem
+            </label>
+            <input type="file" id="inp">
+        </div>
+    </header>
+
+    <main class="app-container">
+        
+        <!-- Área da Imagem / Canvas -->
+        <section class="canvas-area">
+            <div id="image" class="canvas-wrapper">
+                <canvas id="canvas"></canvas>
+            </div>
+        </section>
+
+        <!-- Painel Lateral de Dados -->
+        <aside class="sidebar-panel" id="pontos">
+            <h2>Valores Capturados</h2>
+            
+            <form id="cdPt" action="./cadastros/cdPts.php" method="post">
+                
+                <!-- Grupo Calibração -->
+                <fieldset class="form-group">
+                    <legend>Calibração</legend>
+                    
+                    <div class="input-block">
+                        <label for="centimetros">Valor em centímetros</label>
+                        <input id="centimetros" type="number" value="4">
+                    </div>
+                    
+                    <div class="input-block">
+                        <label for="milimetros">Milímetros na régua</label>
+                        <input id="milimetros" type="text">
+                    </div>
+                    
+                    <div class="input-block">
+                        <label for="vlcalibracao">Valor calibragem em pixel</label>
+                        <input id="vlcalibracao" type="text">
+                    </div>
+                </fieldset>
+                
+                <!-- Grupo Ponto Inicial -->
+                <fieldset class="form-group">
+                    <legend>Ponto Inicial</legend>
+                    
+                    <div class="input-block">
+                        <label for="descricao">Descrição do ponto inicial</label>
+                        <input id="descricao" type="text">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-block">
+                            <label for="pointa">Eixo X</label>
+                            <input id="pointa" type="text">
+                        </div>
+                        <div class="input-block">
+                            <label for="origemy">Eixo Y</label>
+                            <input id="origemy" type="text">
+                        </div>
+                    </div>
+                </fieldset>
+                
+                <!-- Grupo Ponto Final -->
+                <fieldset class="form-group">
+                    <legend>Ponto Final</legend>
+                    
+                    <div class="input-block">
+                        <label for="descricaob">Descrição do ponto final</label>
+                        <input id="descricaob" type="text">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-block">
+                            <label for="pointb">Eixo X</label>
+                            <input id="pointb" type="text">
+                        </div>
+                        <div class="input-block">
+                            <label for="destinoy">Eixo Y</label>
+                            <input id="destinoy" type="text">
+                        </div>
+                    </div>
+                </fieldset>
+                
+                <!-- Grupo Distâncias -->
+                <fieldset class="form-group highlight-group">
+                    <legend>Distâncias</legend>
+                    
+                    <div class="input-block">
+                        <label for="distpixel">Distância em pixel</label>
+                        <input id="distpixel" type="text" readonly>
+                    </div>
+
+                    <div class="input-block">
+                        <label for="distcalib">Distância calibrada</label>
+                        <input id="distcalib" type="text" readonly>
+                    </div>
+                </fieldset>
+
+                <button type="submit" class="btn-submit">Enviar Dados</button>
+            </form>
+        </aside>
+    </main>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let imagemCarregada = new Image();
+        
+        // Array para guardar os pontos clicados (máximo 2 para traçar a reta)
+        let pontosClicados = [];
+
+        // Carrega imagem padrão ao iniciar
+        imagemCarregada.src = "noimage.jpg";
+        imagemCarregada.onload = redimensionarEDesenhar;
+
+        // Ouvinte para upload de nova imagem
+        document.getElementById('inp').onchange = function (e) {
+            if (this.files && this.files[0]) {
+                imagemCarregada = new Image();
+                imagemCarregada.onload = function() {
+                    pontosClicados = []; // Limpa pontos anteriores ao mudar de imagem
+                    limparFormulario();
+                    redimensionarEDesenhar();
+                };
+                imagemCarregada.onerror = function() {
+                    console.error("A imagem fornecida não pôde ser carregada.");
+                };
+                imagemCarregada.src = URL.createObjectURL(this.files[0]);
+            }
+        };
+
+        // Redimensiona o canvas para o tamanho real da imagem e a renderiza
+        function redimensionarEDesenhar() {
+            canvas.width = imagemCarregada.width || 600; // fallback caso noimage não carregue
+            canvas.height = imagemCarregada.height || 400;
+            desenharTudo();
+        }
+
+        // Centraliza a renderização: Imagem de fundo + Pontos + Retas
+        function desenharTudo() {
+            // 1. Desenha a imagem base
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (imagemCarregada.complete && imagemCarregada.naturalWidth !== 0) {
+                ctx.drawImage(imagemCarregada, 0, 0);
+            }
+
+            // 2. Desenha a reta se houver 2 pontos
+            if (pontosClicados.length === 2) {
+                ctx.beginPath();
+                ctx.moveTo(pontosClicados[0].x, pontosClicados[0].y);
+                ctx.lineTo(pontosClicados[1].x, pontosClicados[1].y);
+                ctx.strokeStyle = "#4f46e5"; // Cor indigo moderna
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+
+            // 3. Desenha os marcadores circulares dos pontos
+            pontosClicados.forEach((ponto, index) => {
+                ctx.beginPath();
+                ctx.arc(ponto.x, ponto.y, 6, 0, 2 * Math.PI);
+                ctx.fillStyle = index === 0 ? "#ef4444" : "#22c55e"; // Vermelho para Inicial, Verde para Final
+                ctx.fill();
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Escreve o nome do ponto acima dele
+                ctx.fillStyle = "#ffffff";
+                ctx.shadowColor = "black";
+                ctx.shadowBlur = 4;
+                ctx.font = "bold 12px Inter, sans-serif";
+                ctx.fillText(ponto.descricao, ponto.x + 10, ponto.y - 5);
+                ctx.shadowBlur = 0; // reseta sombra
+            });
+        }
+
+        // ATIVAÇÃO DO CLIQUE: Vincula o clique no canvas à captura de coordenadas
+        canvas.addEventListener('click', function(event) {
+            let rect = canvas.getBoundingClientRect();
+            
+              // Fatores de escala caso o canvas mude visualmente de tamanho pelo CSS
+            let scaleX = canvas.width / rect.width;
+            let scaleY = canvas.height / rect.height;
+
+            // Calcula a posição real do clique na imagem base do canvas
+            let x = (event.clientX - rect.left) * scaleX;
+            let y = (event.clientY - rect.top) * scaleY;
+
+            // Define dinamicamente o nome do ponto com base na quantidade já inserida
+            let nomePonto = pontosClicados.length === 0 ? "Ponto Inicial" : "Ponto Final";
+
+            // Se já existirem 2 pontos, reinicia o fluxo para um novo cálculo
+            if (pontosClicados.length >= 2) {
+                pontosClicados = [];
+                limparFormulario();
+            }
+
+            // Adiciona o novo ponto ao array
+            pontosClicados.push({ x: x, y: y, descricao: nomePonto });
+
+            // Atualiza os inputs do formulário com base nos pontos capturados
+            atualizarFormulario();
+
+            // Renderiza o canvas atualizado (desenha linhas e marcadores)
+            desenharTudo();
+        });
+
+        // Preenche automaticamente as entradas do formulário e realiza os cálculos
+        function atualizarFormulario() {
+            if (pontosClicados.length >= 1) {
+                document.getElementById('descricao').value = pontosClicados[0].descricao;
+                document.getElementById('pointa').value = pontosClicados[0].x.toFixed(2);
+                document.getElementById('origemy').value = pontosClicados[0].y.toFixed(2);
+            }
+
+            if (pontosClicados.length === 2) {
+                document.getElementById('descricaob').value = pontosClicados[1].descricao;
+                document.getElementById('pointb').value = pontosClicados[1].x.toFixed(2);
+                document.getElementById('destinoy').value = pontosClicados[1].y.toFixed(2);
+
+                // Executa os cálculos matemáticos de distância
+                calcularDistancias();
+            }
+        }
+
+        // Calcula a distância euclidiana entre os dois pontos em pixels e unidades reais
+        function calcularDistancias() {
+            const p1 = pontosClicados[0];
+            const p2 = pontosClicados[1];
+
+            // Fórmula da Distância Euclidiana: d = √((x2 - x1)² + (y2 - y1)²)
+            const distPixel = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+            document.getElementById('distpixel').value = distPixel.toFixed(2);
+
+            // Recupera os valores informados pelo usuário para calibração
+            const cmInformado = parseFloat(document.getElementById('centimetros').value) || 0;
+            const pxCalibracao = parseFloat(document.getElementById('vlcalibracao').value) || 0;
+
+            // Se houver uma calibração por pixel válida configurada, calcula a distância real
+            if (pxCalibracao > 0 && cmInformado > 0) {
+                const cmPorPixel = cmInformado / pxCalibracao;
+                const distCalibrada = distPixel * cmPorPixel;
+                document.getElementById('distcalib').value = distCalibrada.toFixed(2) + " cm";
+                
+                // Converte opcionalmente para exibição em milímetros no campo correspondente
+                document.getElementById('milimetros').value = (distCalibrada * 10).toFixed(1) + " mm";
+            } else {
+                document.getElementById('distcalib').value = "Preencha a calibragem em pixel";
+            }
+        }
+
+        // Limpa todos os campos editáveis e bloqueados do formulário de dados
+        function limparFormulario() {
+            document.getElementById('descricao').value = '';
+            document.getElementById('pointa').value = '';
+            document.getElementById('origemy').value = '';
+            document.getElementById('descricaob').value = '';
+            document.getElementById('pointb').value = '';
+            document.getElementById('destinoy').value = '';
+            document.getElementById('distpixel').value = '';
+            document.getElementById('distcalib').value = '';
+            document.getElementById('milimetros').value = '';
+        }
+    </script>
+</body>
+</html>

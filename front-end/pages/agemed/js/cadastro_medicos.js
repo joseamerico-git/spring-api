@@ -20,18 +20,34 @@ let nomeArquivoOriginal = "foto_medico.png";
 // 1. Buscar Especialidades do Backend ao carregar a página
 async function carregarEspecialidades() {
     try {
-        const response = await fetch(`${API_URL}/especialidades`); // Ajuste a URL do endpoint de enums se necessário
-        if (response.ok) {
-            const especialidades = await response.json();
-            especialidades.forEach(esp => {
-                const option = document.createElement('option');
-                option.value = esp; // Assume que o enum vem como String do Java (ex: "CARDIOLOGIA")
-                option.textContent = esp.charAt(0) + esp.slice(1).toLowerCase(); // Formata para exibir (ex: "Cardiologia")
-                selectEspecialidade.appendChild(option);
-            });
+        console.log("Tentando buscar especialidades em:", `${API_URL}/especialidades`);
+        const response = await fetch(`${API_URL}/especialidades`);
+        
+        if (!response.ok) {
+            console.error(`Erro no servidor: Status ${response.status}`);
+            return;
         }
+
+        const especialidades = await response.json();
+        console.log("Especialidades recebidas do backend:", especialidades);
+
+        if (!selectEspecialidade) {
+            console.error("Erro: O elemento <select id='especialidade'> não foi encontrado no HTML.");
+            return;
+        }
+
+        selectEspecialidade.innerHTML = '<option value="">Selecione uma especialidade</option>'; // Limpa e adiciona placeholder
+
+        especialidades.forEach(esp => {
+            const option = document.createElement('option');
+            option.value = esp; 
+            option.textContent = esp.charAt(0) + esp.slice(1).toLowerCase(); 
+            selectEspecialidade.appendChild(option);
+        });
+        
+        console.log("Especialidades injetadas no HTML com sucesso!");
     } catch (error) {
-        console.error('Erro ao carregar especialidades:', error);
+        console.error('Erro de conexão ou CORS ao carregar especialidades:', error);
     }
 }
 carregarEspecialidades();

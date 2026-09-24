@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <title>Estudo canvas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div id="image">
+        <canvas id="canvas"></canvas><br>
+    </div>
+    <input type="file" id="inp"><br>
+
+    <br>
+    
+    <div class="pontos" id="pontos">
+        <h3>Valores capturados</h3>
+        <br>
+        
+        <p>CALIBRAÇÃO</p>
+        <form id="cdPt" action="./cadastros/cdPts.php" method="post">
+            
+            <label for="centimetros">Valor em centímetros.</label><br>
+            <br>
+            <input id="centimetros" type="number" value="4"/><br>
+            
+            <label for="milimetros">Milímetros na régua.</label><br>
+            <input id="milimetros" type="text"><br>
+        
+            <label for="vlcalibracao">Valor calibragem em pixel.</label><br>
+            <input id="vlcalibracao" type="text"/><br>
+            <br>
+            
+            <p>PONTO INICIAL</p>
+                            
+            <label for="descricao">Descrição do ponto inicial.</label><br>
+            <input id="descricao" type="text"/><br>
+        
+            <label for="pointa">Coordenada inicial no eixo x.</label><br>
+            <input id="pointa" type="text"/><br>
+           
+            <label for="origemy">Coordenada inicial no eixo y.</label><br>
+            <input id="origemy" type="text"/><br>
+            <br>
+             
+            <p>PONTO FINAL</p>
+                                 
+            <label for="descricaob">Descrição do ponto final.</label><br>
+            <input id="descricaob" type="text"/><br>
+
+            <label for="pointb">Coordenada final no eixo x.</label><br>
+            <input id="pointb" type="text"/><br>
+        
+            <label for="destinoy">Coordenada final no eixo y.</label><br>
+            <input id="destinoy" type="text"/><br>
+            
+            <p>DISTÂNCIAS</p>
+            
+            <label for="distpixel">Distância em pixels</label><br>
+            <input id="distpixel" type="text"/><br>
+            
+            <!-- Você pode adicionar um botão de envio aqui se precisar -->
+            <!-- <button type="submit">Salvar Dados</button> -->
+
+        </form>
+    </div>
+
+</body>
+</html>
