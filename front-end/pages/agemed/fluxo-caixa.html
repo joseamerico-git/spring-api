@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,10 +8,12 @@
     <style>
         :root {
             --primary: #2563eb;
+            --primary-hover: #1d4ed8;
             --success: #16a34a;
             --danger: #dc2626;
             --background: #f8fafc;
             --text: #1e293b;
+            --border: #cbd5e1;
         }
 
         * {
@@ -27,7 +30,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
         }
 
@@ -52,7 +55,7 @@
             background: #ffffff;
             padding: 1.5rem;
             border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .card h3 {
@@ -67,11 +70,19 @@
             font-weight: bold;
         }
 
-        .text-entrada { color: var(--success); }
-        .text-saida { color: var(--danger); }
-        .text-total { color: var(--primary); }
+        .text-entrada {
+            color: var(--success);
+        }
 
-        /* Formulário e Tabela */
+        .text-saida {
+            color: var(--danger);
+        }
+
+        .text-total {
+            color: var(--primary);
+        }
+
+        /* Estrutura da Página */
         .content-layout {
             display: grid;
             grid-template-columns: 350px 1fr;
@@ -79,14 +90,17 @@
         }
 
         @media (max-width: 768px) {
-            .content-layout { grid-template-columns: 1fr; }
+            .content-layout {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .form-section, .table-section {
+        .form-section,
+        .table-section {
             background: #ffffff;
             padding: 1.5rem;
             border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .form-group {
@@ -103,14 +117,18 @@
         .form-control {
             width: 100%;
             padding: 0.6rem;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--border);
             border-radius: 6px;
             font-size: 1rem;
+            background-color: #ffffff;
+            color: var(--text);
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
         .form-control:focus {
             outline: none;
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
 
         button {
@@ -125,17 +143,32 @@
             transition: background 0.2s;
         }
 
-        button:hover { background-color: #1d4ed8; }
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Caixa de Pesquisa */
+        .search-box {
+            margin-bottom: 1.5rem;
+        }
 
         /* Tabela */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
+            font-size: 0.95rem;
         }
 
-        th, td {
-            padding: 0.75rem;
+        th,
+        td {
+            padding: 0.85rem 1rem;
             border-bottom: 1px solid #e2e8f0;
         }
 
@@ -145,93 +178,122 @@
             font-weight: 600;
         }
 
+        tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
         .badge {
+            display: inline-block;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             font-size: 0.75rem;
             font-weight: bold;
         }
 
-        .badge-entrada { background: #dcfce7; color: #15803d; }
-        .badge-saida { background: #fee2e2; color: #b91c1c; }
+        .badge-entrada {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .badge-saida {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <header>
-        <h1>Gerenciador de Fluxo de Caixa</h1>
-    </header>
+    <div class="container">
+        <header>
+            <h1>Gerenciador de Fluxo de Caixa</h1>
+        </header>
 
-    <!-- Indicadores de Saldo -->
-    <div class="dashboard">
-        <div class="card">
-            <h3>Entradas</h3>
-            <p id="total-entradas" class="text-entrada">R$ 0,00</p>
-        </div>
-        <div class="card">
-            <h3>Saídas</h3>
-            <p id="total-saidas" class="text-saida">R$ 0,00</p>
-        </div>
-        <div class="card">
-            <h3>Saldo Atual</h3>
-            <p id="saldo-geral" class="text-total">R$ 0,00</p>
-        </div>
-    </div>
-
-    <div class="content-layout">
-        <!-- Formulário de Cadastro -->
-        <div class="form-section">
-            <h2 style="margin-bottom: 1rem; font-size: 1.2rem;">Novo Lançamento</h2>
-            <form id="form-lancamento">
-                <div class="form-group">
-                    <label for="descricao">Descrição</label>
-                    <input type="text" id="descricao" class="form-control" placeholder="Ex: Venda produto X" required>
-                </div>
-                <div class="form-group">
-                    <label for="valor">Valor (R$)</label>
-                    <input type="number" id="valor" class="form-control" step="0.01" min="0.01" placeholder="0,00" required>
-                </div>
-                <div class="form-group">
-                    <label for="tipo">Tipo</label>
-                    <select id="tipo" class="form-control" required>
-                        <option value="ENTRADA">Entrada</option>
-                        <option value="SAIDA">Saída</option>
-                    </select>
-                </div>
-                <button type="submit">Registrar Movimento</button>
-            </form>
+        <!-- Indicadores de Saldo -->
+        <div class="dashboard">
+            <div class="card">
+                <h3>Entradas</h3>
+                <p id="total-entradas" class="text-entrada">R$ 0,00</p>
+            </div>
+            <div class="card">
+                <h3>Saídas</h3>
+                <p id="total-saidas" class="text-saida">R$ 0,00</p>
+            </div>
+            <div class="card">
+                <h3>Saldo Atual</h3>
+                <p id="saldo-geral" class="text-total">R$ 0,00</p>
+            </div>
         </div>
 
-        <!-- Tabela de Histórico -->
-        <div class="table-section">
-            <h2 style="margin-bottom: 1rem; font-size: 1.2rem;">Histórico de Lançamentos</h2>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Data/Hora</th>
-                            <th>Descrição</th>
-                            <th>Tipo</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabela-corpo">
-                        <!-- Linhas injetadas dinamicamente via JS -->
-                    </tbody>
-                </table>
+        <div class="content-layout">
+            <!-- Formulário de Cadastro -->
+            <div class="form-section">
+                <h2 style="margin-bottom: 1.2rem; font-size: 1.2rem; color: #0f172a;">Novo Lançamento</h2>
+                <form id="form-lancamento">
+                    <div class="form-group">
+                        <label for="descricao">Descrição</label>
+                        <input type="text" id="descricao" class="form-control" placeholder="Ex: Venda produto X"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="valor">Valor (R$)</label>
+                        <input type="number" id="valor" class="form-control" step="0.01" min="0.01" placeholder="0,00"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tipo">Tipo</label>
+                        <select id="tipo" class="form-control" required>
+                            <option value="ENTRADA">Entrada</option>
+                            <option value="SAIDA">Saída</option>
+                        </select>
+                    </div>
+                    <button type="submit">Registrar Movimento</button>
+                </form>
+            </div>
+
+            <!-- Tabela de Histórico -->
+            <div class="table-section">
+                <h2 style="margin-bottom: 1rem; font-size: 1.2rem; color: #0f172a;">Histórico de Lançamentos</h2>
+
+                <!-- Barra de pesquisa em tempo real -->
+                <div class="search-box">
+                    <input type="text" id="input-busca" class="form-control"
+                        placeholder="🔍 Digite a descrição ou o tipo para filtrar...">
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Descrição</th>
+                                <th>Tipo</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-corpo">
+                            <tr>
+                                <td colspan="4" style="text-align:center; color:#64748b; font-style: italic;">Carregando
+                                    registros...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
+   <script>
     const API_URL = 'http://localhost:8080/api/lancamentos';
 
-    // Carrega os dados assim que a tela abre
-    document.addEventListener('DOMContentLoaded', carregarLancamentos);
+    // Lista estável na memória para manipulação de filtros locais
+    let todosOsLancamentos = [];
 
-    // Evento de envio do formulário
+    // Inicialização de ouvintes após o carregamento da página
+    document.addEventListener('DOMContentLoaded', carregarLancamentos);
+    document.getElementById('input-busca').addEventListener('input', filtrarLocalmente);
+
+    // Envio do formulário (POST)
     document.getElementById('form-lancamento').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -250,7 +312,7 @@
 
             if (response.ok) {
                 document.getElementById('form-lancamento').reset();
-                carregarLancamentos(); // Recarrega os dados e atualiza a tela
+                await carregarLancamentos(); 
             } else {
                 const erroTexto = await response.text();
                 alert('Erro ao salvar: ' + erroTexto);
@@ -261,50 +323,73 @@
         }
     });
 
-    // Função que busca dados do back-end e atualiza a interface
+    // Coleta de dados via API (GET)
     async function carregarLancamentos() {
         try {
             const response = await fetch(API_URL);
             if (!response.ok) throw new Error('Erro ao buscar lançamentos');
-            
-            const lancamentos = await response.json();
-            
-            atualizarTabela(lancamentos);
-            atualizarDashboard(lancamentos);
+
+            todosOsLancamentos = await response.json();
+            document.getElementById('input-busca').value = ''; // Reseta input
+
+            renderizarTabela(todosOsLancamentos);
+            atualizarDashboard(todosOsLancamentos); 
         } catch (error) {
             console.error(error);
+            const corpo = document.getElementById('tabela-corpo');
+            corpo.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--danger);">Não foi possível conectar ao servidor Spring Boot.</td></tr>`;
         }
     }
 
-    function atualizarTabela(lancamentos) {
-        const corpo = document.getElementById('tabela-corpo');
-        corpo.innerHTML = '';
+    // Processamento dinâmico da caixa de busca
+    function filtrarLocalmente(e) {
+        const termo = e.target.value.toLowerCase().trim();
 
-        if (lancamentos.length === 0) {
-            corpo.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">Nenhum lançamento registrado.</td></tr>`;
+        if (!termo) {
+            renderizarTabela(todosOsLancamentos);
+            atualizarDashboard(todosOsLancamentos);
             return;
         }
 
-        // Ordena os lançamentos para mostrar os mais recentes primeiro
-        lancamentos.reverse().forEach(l => {
+        const listaFiltrada = todosOsLancamentos.filter(l => {
+            const descricaoMatch = l.descricao ? l.descricao.toLowerCase().includes(termo) : false;
+            const tipoMatch = l.tipo ? l.tipo.toLowerCase().includes(termo) : false;
+            return descricaoMatch || tipoMatch;
+        });
+
+        renderizarTabela(listaFiltrada);
+        atualizarDashboard(listaFiltrada);
+    }
+
+    // Montagem estrutural das linhas da tabela
+    function renderizarTabela(lista) {
+        const corpo = document.getElementById('tabela-corpo');
+        corpo.innerHTML = '';
+
+        if (lista.length === 0) {
+            corpo.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">Nenhum lançamento encontrado.</td></tr>`;
+            return;
+        }
+
+        [...lista].reverse().forEach(l => {
             const dataFormatada = new Date(l.dataHora).toLocaleString('pt-BR');
             const classeBadge = l.tipo === 'ENTRADA' ? 'badge-entrada' : 'badge-saida';
             const sinal = l.tipo === 'ENTRADA' ? '+' : '-';
 
+            // Correção da estrutura HTML e concatenação das variáveis
             const linha = `
                 <tr>
                     <td>${dataFormatada}</td>
                     <td>${l.descricao}</td>
                     <td><span class="badge ${classeBadge}">${l.tipo}</span></td>
-                    <td class="${l.tipo === 'ENTRADA' ? 'text-entrada' : 'text-saida'}">
-                        ${sinal} ${formatarMoeda(l.valor)}
-                    </td>
+                    <td>${sinal} ${formatarMoeda(l.valor)}</td>
                 </tr>
             `;
             corpo.innerHTML += linha;
         });
     }
 
+    //  Atualização reativa dos blocos de saldo superiores
     function atualizarDashboard(lancamentos) {
         let entradas = 0;
         let saidas = 0;
@@ -318,16 +403,14 @@
 
         document.getElementById('total-entradas').innerText = formatarMoeda(entradas);
         document.getElementById('total-saidas').innerText = formatarMoeda(saidas);
-        
+
         const saldoElemento = document.getElementById('saldo-geral');
         saldoElemento.innerText = formatarMoeda(saldo);
-        
-        // Altera a cor do saldo com base no resultado financeiro
-saldoElemento.className = saldo >= 0 ? 'text-entrada' : 'text-saida';
-}
-function formatarMoeda(valor) {
-return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
+
+        saldoElemento.className = saldo >= 0 ? 'text-entrada' : 'text-saida';
+    }
+
+    function formatarMoeda(valor) {
+        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
 </script>
-</body>
-</html>
